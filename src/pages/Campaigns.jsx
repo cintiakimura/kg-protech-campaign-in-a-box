@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Plus, Rocket, Image as ImageIcon } from 'lucide-react';
+import { Plus, Rocket, Image as ImageIcon, Edit } from 'lucide-react';
 import CreateCampaignModal from '../components/campaigns/CreateCampaignModal';
+import EditCampaignModal from '../components/campaigns/EditCampaignModal';
 import SelectRecipientsModal from '../components/campaigns/SelectRecipientsModal';
 import { Badge } from '@/components/ui/badge';
 
 export default function Campaigns() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSelectRecipientsOpen, setIsSelectRecipientsOpen] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   const queryClient = useQueryClient();
@@ -62,6 +64,11 @@ export default function Campaigns() {
 
   const handleConfirmLaunch = (selectedLeads) => {
     launchCampaignMutation.mutate({ campaign: selectedCampaign, selectedLeads });
+  };
+
+  const handleEditClick = (campaign) => {
+    setSelectedCampaign(campaign);
+    setIsEditModalOpen(true);
   };
 
   const statusColors = {
@@ -122,9 +129,19 @@ export default function Campaigns() {
               <div className="p-6">
                 <div className="flex items-start justify-between mb-3">
                   <h3 className="text-lg font-bold text-white">{campaign.name}</h3>
-                  <Badge className={`${statusColors[campaign.status]} text-white border-0`}>
-                    {campaign.status}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleEditClick(campaign)}
+                      className="text-[#00c600] hover:text-[#00dd00] hover:bg-[#00c600]/10 h-8 px-2"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Badge className={`${statusColors[campaign.status]} text-white border-0`}>
+                      {campaign.status}
+                    </Badge>
+                  </div>
                 </div>
                 
                 <div className="space-y-2 mb-4">
@@ -165,6 +182,16 @@ export default function Campaigns() {
       <CreateCampaignModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={() => queryClient.invalidateQueries(['campaigns'])}
+      />
+
+      <EditCampaignModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedCampaign(null);
+        }}
+        campaign={selectedCampaign}
         onSuccess={() => queryClient.invalidateQueries(['campaigns'])}
       />
 
