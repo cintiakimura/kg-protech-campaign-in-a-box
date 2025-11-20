@@ -4,10 +4,13 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Plus, Rocket, Image as ImageIcon } from 'lucide-react';
 import CreateCampaignModal from '../components/campaigns/CreateCampaignModal';
+import SelectRecipientsModal from '../components/campaigns/SelectRecipientsModal';
 import { Badge } from '@/components/ui/badge';
 
 export default function Campaigns() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isSelectRecipientsOpen, setIsSelectRecipientsOpen] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: campaigns = [], isLoading } = useQuery({
@@ -21,9 +24,9 @@ export default function Campaigns() {
   });
 
   const launchCampaignMutation = useMutation({
-    mutationFn: async (campaign) => {
-      // Send emails to all leads
-      const emailPromises = leads.map(lead => 
+    mutationFn: async ({ campaign, selectedLeads }) => {
+      // Send emails to selected leads
+      const emailPromises = selectedLeads.map(lead => 
         base44.entities.EmailMessage.create({
           subject: campaign.email_subject,
           body: campaign.email_body,
@@ -40,15 +43,26 @@ export default function Campaigns() {
       // Update campaign
       return base44.entities.Campaign.update(campaign.id, {
         status: 'active',
-        sent_count: leads.length
+        sent_count: (campaign.sent_count || 0) + selectedLeads.length
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['campaigns']);
       queryClient.invalidateQueries(['emails']);
+      setIsSelectRecipientsOpen(false);
+      setSelectedCampaign(null);
       alert('Campaign launched successfully!');
     }
   });
+
+  const handleLaunchClick = (campaign) => {
+    setSelectedCampaign(campaign);
+    setIsSelectRecipientsOpen(true);
+  };
+
+  const handleConfirmLaunch = (selectedLeads) => {
+    launchCampaignMutation.mutate({ campaign: selectedCampaign, selectedLeads });
+  };
 
   const statusColors = {
     draft: 'bg-gray-500',
@@ -134,12 +148,12 @@ export default function Campaigns() {
 
                 {campaign.status === 'draft' && (
                   <Button
-                    onClick={() => launchCampaignMutation.mutate(campaign)}
-                    disabled={launchCampaignMutation.isPending || leads.length === 0}
+                    onClick={() => handleLaunchClick(campaign)}
+                    disabled={leads.length === 0}
                     className="w-full bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium"
                   >
                     <Rocket className="w-4 h-4 mr-2" />
-                    {leads.length === 0 ? 'No Leads to Send' : `Launch to ${leads.length} Leads`}
+                    {leads.length === 0 ? 'No Leads Available' : 'Select Recipients & Launch'}
                   </Button>
                 )}
               </div>
@@ -152,6 +166,17 @@ export default function Campaigns() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSuccess={() => queryClient.invalidateQueries(['campaigns'])}
+      />
+
+      <SelectRecipientsModal
+        isOpen={isSelectRecipientsOpen}
+        onClose={() => {
+          setIsSelectRecipientsOpen(false);
+          setSelectedCampaign(null);
+        }}
+        leads={leads}
+        onConfirm={handleConfirmLaunch}
+        isLaunching={launchCampaignMutation.isPending}
       />
     </div>
   );

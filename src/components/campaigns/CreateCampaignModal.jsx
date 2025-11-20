@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Sparkles, Image as ImageIcon, Send } from 'lucide-react';
+import { X, Sparkles, Image as ImageIcon, Send, Upload, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -74,7 +74,7 @@ Return the result in the following JSON format:
     
     setIsGeneratingImage(true);
     try {
-      const prompt = `Professional marketing banner for IoT automotive training solution. Modern, high-tech automotive theme with connected vehicles, sensors, and digital interfaces. Sleek design with dark tones and green accents. Campaign: ${formData.name}`;
+      const prompt = `Professional automotive training scene: Modern cars in a professional garage workshop with technicians learning IoT automotive systems. High-tech equipment, diagnostic tools, connected vehicle sensors, and digital training displays. Clean, modern garage environment with good lighting. Photorealistic style.`;
       
       const result = await base44.integrations.Core.GenerateImage({
         prompt: prompt
@@ -89,6 +89,31 @@ Return the result in the following JSON format:
     } finally {
       setIsGeneratingImage(false);
     }
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    setIsGeneratingImage(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setFormData(prev => ({
+        ...prev,
+        generated_image_url: file_url
+      }));
+    } catch (error) {
+      alert('Failed to upload image. Please try again.');
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
+  const handleDeleteImage = () => {
+    setFormData(prev => ({
+      ...prev,
+      generated_image_url: ''
+    }));
   };
 
   const handleSubmit = async () => {
@@ -152,7 +177,7 @@ Return the result in the following JSON format:
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
             <Button
               onClick={handleGenerateCopy}
               disabled={isGeneratingCopy}
@@ -173,7 +198,7 @@ Return the result in the following JSON format:
               className="bg-[#333333] hover:bg-[#444444] text-white"
             >
               {isGeneratingImage ? (
-                <>Generating Image...</>
+                <>Generating...</>
               ) : (
                 <>
                   <ImageIcon className="w-4 h-4 mr-2" />
@@ -181,6 +206,26 @@ Return the result in the following JSON format:
                 </>
               )}
             </Button>
+            <div>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+                id="image-upload"
+                disabled={isGeneratingImage}
+              />
+              <label htmlFor="image-upload">
+                <Button
+                  as="span"
+                  disabled={isGeneratingImage}
+                  className="bg-[#333333] hover:bg-[#444444] text-white cursor-pointer"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload Image
+                </Button>
+              </label>
+            </div>
           </div>
 
           <div>
@@ -206,7 +251,18 @@ Return the result in the following JSON format:
 
           {formData.generated_image_url && (
             <div>
-              <Label className="text-gray-300 mb-2">Campaign Image</Label>
+              <div className="flex items-center justify-between mb-2">
+                <Label className="text-gray-300">Campaign Image</Label>
+                <Button
+                  onClick={handleDeleteImage}
+                  size="sm"
+                  variant="ghost"
+                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                >
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Delete
+                </Button>
+              </div>
               <img 
                 src={formData.generated_image_url} 
                 alt="Campaign" 
