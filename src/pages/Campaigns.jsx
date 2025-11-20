@@ -1,0 +1,158 @@
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
+import { Button } from '@/components/ui/button';
+import { Plus, Rocket, Image as ImageIcon } from 'lucide-react';
+import CreateCampaignModal from '../components/campaigns/CreateCampaignModal';
+import { Badge } from '@/components/ui/badge';
+
+export default function Campaigns() {
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const { data: campaigns = [], isLoading } = useQuery({
+    queryKey: ['campaigns'],
+    queryFn: () => base44.entities.Campaign.list('-created_date')
+  });
+
+  const { data: leads = [] } = useQuery({
+    queryKey: ['leads'],
+    queryFn: () => base44.entities.Lead.list()
+  });
+
+  const launchCampaignMutation = useMutation({
+    mutationFn: async (campaign) => {
+      // Send emails to all leads
+      const emailPromises = leads.map(lead => 
+        base44.entities.EmailMessage.create({
+          subject: campaign.email_subject,
+          body: campaign.email_body,
+          from_email: 'campaigns@kgprotech.com',
+          to_email: lead.email,
+          folder: 'sent',
+          is_read: true,
+          date: new Date().toISOString()
+        })
+      );
+      
+      await Promise.all(emailPromises);
+      
+      // Update campaign
+      return base44.entities.Campaign.update(campaign.id, {
+        status: 'active',
+        sent_count: leads.length
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['campaigns']);
+      queryClient.invalidateQueries(['emails']);
+      alert('Campaign launched successfully!');
+    }
+  });
+
+  const statusColors = {
+    draft: 'bg-gray-500',
+    active: 'bg-[#00c600]',
+    completed: 'bg-blue-500',
+    paused: 'bg-yellow-500'
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-2">Campaigns</h1>
+          <p className="text-gray-400">Create and manage marketing campaigns</p>
+        </div>
+        <Button
+          onClick={() => setIsCreateModalOpen(true)}
+          className="bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium"
+        >
+          <Plus className="w-5 h-5 mr-2" />
+          Create Campaign
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="text-center py-12">
+          <p className="text-gray-400">Loading campaigns...</p>
+        </div>
+      ) : campaigns.length === 0 ? (
+        <div className="text-center py-12 bg-[#2a2a2a] rounded-xl border border-[#333333]">
+          <Rocket className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+          <p className="text-gray-400 mb-4">No campaigns yet. Create your first campaign to get started!</p>
+          <Button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Create Campaign
+          </Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {campaigns.map(campaign => (
+            <div key={campaign.id} className="bg-[#2a2a2a] rounded-xl border border-[#333333] overflow-hidden hover:border-[#00c600] transition-all">
+              {campaign.generated_image_url ? (
+                <img 
+                  src={campaign.generated_image_url} 
+                  alt={campaign.name}
+                  className="w-full h-48 object-cover"
+                />
+              ) : (
+                <div className="w-full h-48 bg-[#333333] flex items-center justify-center">
+                  <ImageIcon className="w-12 h-12 text-gray-600" />
+                </div>
+              )}
+              
+              <div className="p-6">
+                <div className="flex items-start justify-between mb-3">
+                  <h3 className="text-lg font-bold text-white">{campaign.name}</h3>
+                  <Badge className={`${statusColors[campaign.status]} text-white border-0`}>
+                    {campaign.status}
+                  </Badge>
+                </div>
+                
+                <div className="space-y-2 mb-4">
+                  <p className="text-gray-400 text-sm">
+                    <span className="text-gray-500">Language:</span> {campaign.language}
+                  </p>
+                  <p className="text-gray-400 text-sm">
+                    <span className="text-gray-500">Target:</span> {campaign.target_audience || 'Not specified'}
+                  </p>
+                  <p className="text-gray-400 text-sm">
+                    <span className="text-gray-500">Sent:</span> {campaign.sent_count || 0} emails
+                  </p>
+                </div>
+
+                {campaign.email_subject && (
+                  <div className="mb-4 p-3 bg-[#333333] rounded-lg">
+                    <p className="text-gray-400 text-xs mb-1">Subject:</p>
+                    <p className="text-white text-sm">{campaign.email_subject}</p>
+                  </div>
+                )}
+
+                {campaign.status === 'draft' && (
+                  <Button
+                    onClick={() => launchCampaignMutation.mutate(campaign)}
+                    disabled={launchCampaignMutation.isPending || leads.length === 0}
+                    className="w-full bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium"
+                  >
+                    <Rocket className="w-4 h-4 mr-2" />
+                    {leads.length === 0 ? 'No Leads to Send' : `Launch to ${leads.length} Leads`}
+                  </Button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <CreateCampaignModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={() => queryClient.invalidateQueries(['campaigns'])}
+      />
+    </div>
+  );
+}
