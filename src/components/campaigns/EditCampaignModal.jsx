@@ -9,13 +9,26 @@ import { base44 } from '@/api/base44Client';
 
 export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess }) {
   const [formData, setFormData] = useState({
-    name: campaign?.name || '',
-    language: campaign?.language || 'English',
-    target_audience: campaign?.target_audience || '',
-    email_subject: campaign?.email_subject || '',
-    email_body: campaign?.email_body || '',
-    generated_image_url: campaign?.generated_image_url || ''
+    name: '',
+    language: 'English',
+    target_audience: '',
+    email_subject: '',
+    email_body: '',
+    generated_image_url: ''
   });
+  
+  React.useEffect(() => {
+    if (campaign) {
+      setFormData({
+        name: campaign.name || '',
+        language: campaign.language || 'English',
+        target_audience: campaign.target_audience || '',
+        email_subject: campaign.email_subject || '',
+        email_body: campaign.email_body || '',
+        generated_image_url: campaign.generated_image_url || ''
+      });
+    }
+  }, [campaign]);
   const [isGeneratingCopy, setIsGeneratingCopy] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
