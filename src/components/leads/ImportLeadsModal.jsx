@@ -90,14 +90,12 @@ export default function ImportLeadsModal({ isOpen, onClose, onSuccess }) {
               className="hidden"
               id="file-upload"
             />
-            <label htmlFor="file-upload">
-              <Button
-                as="span"
-                className="bg-[#333333] hover:bg-[#444444] text-white cursor-pointer"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                Choose File
-              </Button>
+            <label 
+              htmlFor="file-upload"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#333333] hover:bg-[#444444] text-white rounded-md cursor-pointer transition-colors font-medium"
+            >
+              <Upload className="w-4 h-4" />
+              Choose File
             </label>
             {file && (
               <p className="text-[#00c600] mt-3 text-sm">{file.name}</p>
