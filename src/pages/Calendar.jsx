@@ -53,8 +53,8 @@ export default function Calendar() {
     return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(webinar.title)}&dates=${startDate}/${endDate}&details=${encodeURIComponent(webinar.description || '')}&location=${encodeURIComponent(webinar.meeting_link || '')}`;
   };
 
-  const upcomingWebinars = webinars.filter(w => new Date(w.start_time) > new Date());
-  const pastWebinars = webinars.filter(w => new Date(w.start_time) <= new Date());
+  const upcomingWebinars = webinars.filter((w) => new Date(w.start_time) > new Date());
+  const pastWebinars = webinars.filter((w) => new Date(w.start_time) <= new Date());
 
   return (
     <div className="space-y-6">
@@ -65,8 +65,8 @@ export default function Calendar() {
         </div>
         <Button
           onClick={() => setIsCreateModalOpen(true)}
-          className="bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium"
-        >
+          className="bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium">
+
           <Plus className="w-5 h-5 mr-2" />
           Schedule Webinar
         </Button>
@@ -75,15 +75,15 @@ export default function Calendar() {
       {/* Upcoming Webinars */}
       <div>
         <h2 className="text-xl font-bold text-white mb-4">Upcoming Sessions</h2>
-        {upcomingWebinars.length === 0 ? (
-          <div className="bg-[#2a2a2a] rounded-xl border border-[#333333] p-8 text-center">
+        {upcomingWebinars.length === 0 ?
+        <div className="bg-[#2a2a2a] rounded-xl border border-[#333333] p-8 text-center">
             <CalendarIcon className="w-12 h-12 text-gray-600 mx-auto mb-3" />
             <p className="text-gray-400">No upcoming webinars scheduled</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {upcomingWebinars.map(webinar => (
-              <div key={webinar.id} className="bg-[#2a2a2a] rounded-xl border border-[#333333] p-6 hover:border-[#00c600] transition-all">
+          </div> :
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {upcomingWebinars.map((webinar) =>
+          <div key={webinar.id} className="bg-[#2a2a2a] rounded-xl border border-[#333333] p-6 hover:border-[#00c600] transition-all">
                 <div className="flex items-start justify-between mb-3">
                   <h3 className="text-lg font-bold text-white">{webinar.title}</h3>
                   <Badge className="bg-[#00c600] text-white border-0">Upcoming</Badge>
@@ -111,39 +111,39 @@ export default function Calendar() {
                 </div>
 
                 <div className="flex gap-2">
-                  {webinar.meeting_link && (
-                    <Button
-                      size="sm"
-                      className="flex-1 bg-[#333333] hover:bg-[#444444] text-white"
-                      onClick={() => window.open(webinar.meeting_link, '_blank')}
-                    >
+                  {webinar.meeting_link &&
+              <Button
+                size="sm"
+                className="flex-1 bg-[#333333] hover:bg-[#444444] text-white"
+                onClick={() => window.open(webinar.meeting_link, '_blank')}>
+
                       <Video className="w-4 h-4 mr-2" />
                       Join Meeting
                     </Button>
-                  )}
+              }
                   <Button
-                    size="sm"
-                    variant="outline"
-                    className="border-[#444444] text-gray-300 hover:bg-[#333333]"
-                    onClick={() => window.open(generateGoogleCalendarLink(webinar), '_blank')}
-                  >
+                size="sm"
+                variant="outline" className="bg-[#00c600] text-[#212121] px-3 text-xs font-medium rounded-md inline-flex items-center justify-center gap-2 whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border shadow-sm hover:text-accent-foreground h-8 border-[#444444] hover:bg-[#333333]"
+
+                onClick={() => window.open(generateGoogleCalendarLink(webinar), '_blank')}>
+
                     <ExternalLink className="w-4 h-4 mr-2" />
                     Add to Calendar
                   </Button>
                 </div>
               </div>
-            ))}
+          )}
           </div>
-        )}
+        }
       </div>
 
       {/* Past Webinars */}
-      {pastWebinars.length > 0 && (
-        <div>
+      {pastWebinars.length > 0 &&
+      <div>
           <h2 className="text-xl font-bold text-white mb-4">Past Sessions</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {pastWebinars.map(webinar => (
-              <div key={webinar.id} className="bg-[#2a2a2a] rounded-xl border border-[#333333] p-6 opacity-75">
+            {pastWebinars.map((webinar) =>
+          <div key={webinar.id} className="bg-[#2a2a2a] rounded-xl border border-[#333333] p-6 opacity-75">
                 <div className="flex items-start justify-between mb-3">
                   <h3 className="text-lg font-bold text-white">{webinar.title}</h3>
                   <Badge className="bg-gray-500 text-white border-0">Completed</Badge>
@@ -159,14 +159,14 @@ export default function Calendar() {
                   </span>
                 </div>
               </div>
-            ))}
+          )}
           </div>
         </div>
-      )}
+      }
 
       {/* Create Webinar Modal */}
-      {isCreateModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
+      {isCreateModalOpen &&
+      <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
           <div className="bg-[#2a2a2a] rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto scrollbar-custom">
             <div className="sticky top-0 bg-[#2a2a2a] border-b border-[#333333] p-6 flex items-center justify-between">
               <h2 className="text-xl font-bold text-white">Schedule Webinar</h2>
@@ -179,42 +179,42 @@ export default function Calendar() {
               <div>
                 <Label className="text-gray-300 mb-2">Title</Label>
                 <Input
-                  value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="IoT Automotive Training Session"
-                  className="bg-[#333333] border-[#444444] text-white"
-                />
+                value={formData.title}
+                onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+                placeholder="IoT Automotive Training Session"
+                className="bg-[#333333] border-[#444444] text-white" />
+
               </div>
 
               <div>
                 <Label className="text-gray-300 mb-2">Description</Label>
                 <Textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Session overview and topics covered"
-                  rows={3}
-                  className="bg-[#333333] border-[#444444] text-white"
-                />
+                value={formData.description}
+                onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+                placeholder="Session overview and topics covered"
+                rows={3}
+                className="bg-[#333333] border-[#444444] text-white" />
+
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-gray-300 mb-2">Start Time</Label>
                   <Input
-                    type="datetime-local"
-                    value={formData.start_time}
-                    onChange={(e) => setFormData(prev => ({ ...prev, start_time: e.target.value }))}
-                    className="bg-[#333333] border-[#444444] text-white"
-                  />
+                  type="datetime-local"
+                  value={formData.start_time}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, start_time: e.target.value }))}
+                  className="bg-[#333333] border-[#444444] text-white" />
+
                 </div>
                 <div>
                   <Label className="text-gray-300 mb-2">End Time</Label>
                   <Input
-                    type="datetime-local"
-                    value={formData.end_time}
-                    onChange={(e) => setFormData(prev => ({ ...prev, end_time: e.target.value }))}
-                    className="bg-[#333333] border-[#444444] text-white"
-                  />
+                  type="datetime-local"
+                  value={formData.end_time}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, end_time: e.target.value }))}
+                  className="bg-[#333333] border-[#444444] text-white" />
+
                 </div>
               </div>
 
@@ -222,54 +222,54 @@ export default function Calendar() {
                 <div>
                   <Label className="text-gray-300 mb-2">Host Name</Label>
                   <Input
-                    value={formData.host_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, host_name: e.target.value }))}
-                    placeholder="John Doe"
-                    className="bg-[#333333] border-[#444444] text-white"
-                  />
+                  value={formData.host_name}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, host_name: e.target.value }))}
+                  placeholder="John Doe"
+                  className="bg-[#333333] border-[#444444] text-white" />
+
                 </div>
                 <div>
                   <Label className="text-gray-300 mb-2">Max Attendees</Label>
                   <Input
-                    type="number"
-                    value={formData.max_attendees}
-                    onChange={(e) => setFormData(prev => ({ ...prev, max_attendees: parseInt(e.target.value) }))}
-                    className="bg-[#333333] border-[#444444] text-white"
-                  />
+                  type="number"
+                  value={formData.max_attendees}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, max_attendees: parseInt(e.target.value) }))}
+                  className="bg-[#333333] border-[#444444] text-white" />
+
                 </div>
               </div>
 
               <div>
                 <Label className="text-gray-300 mb-2">Meeting Link (Optional)</Label>
                 <Input
-                  value={formData.meeting_link}
-                  onChange={(e) => setFormData(prev => ({ ...prev, meeting_link: e.target.value }))}
-                  placeholder="https://meet.google.com/xxx-xxxx-xxx"
-                  className="bg-[#333333] border-[#444444] text-white"
-                />
+                value={formData.meeting_link}
+                onChange={(e) => setFormData((prev) => ({ ...prev, meeting_link: e.target.value }))}
+                placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                className="bg-[#333333] border-[#444444] text-white" />
+
                 <p className="text-gray-500 text-xs mt-1">Google Meet, Zoom, or any meeting platform link</p>
               </div>
 
               <div className="flex gap-3 pt-4">
                 <Button
-                  onClick={() => createWebinarMutation.mutate(formData)}
-                  disabled={!formData.title || !formData.start_time || createWebinarMutation.isPending}
-                  className="flex-1 bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium"
-                >
+                onClick={() => createWebinarMutation.mutate(formData)}
+                disabled={!formData.title || !formData.start_time || createWebinarMutation.isPending}
+                className="flex-1 bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium">
+
                   Schedule Webinar
                 </Button>
                 <Button
-                  onClick={() => setIsCreateModalOpen(false)}
-                  variant="outline"
-                  className="border-[#444444] text-gray-300 hover:bg-[#333333]"
-                >
+                onClick={() => setIsCreateModalOpen(false)}
+                variant="outline"
+                className="border-[#444444] text-gray-300 hover:bg-[#333333]">
+
                   Cancel
                 </Button>
               </div>
             </div>
           </div>
         </div>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 }
