@@ -28,42 +28,52 @@ export default function ImportLeadsModal({ isOpen, onClose, onSuccess }) {
       const result = await base44.integrations.Core.ExtractDataFromUploadedFile({
         file_url: file_url,
         json_schema: {
-          type: "object",
-          properties: {
-            leads: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  full_name: { type: "string" },
-                  email: { type: "string" },
-                  company: { type: "string" },
-                  language_preference: { type: "string" },
-                  notes: { type: "string" }
-                }
-              }
-            }
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              full_name: { type: "string" },
+              email: { type: "string" },
+              company: { type: "string" },
+              language_preference: { type: "string" },
+              notes: { type: "string" }
+            },
+            required: ["full_name", "email"]
           }
         }
       });
 
-      if (result.status === 'success' && result.output?.leads) {
+      if (result.status === 'success' && result.output) {
+        const leadsData = Array.isArray(result.output) ? result.output : [result.output];
+        
+        if (leadsData.length === 0) {
+          alert('No lead data found in the file');
+          return;
+        }
+
         // Bulk create leads
-        await base44.entities.Lead.bulkCreate(
-          result.output.leads.map(lead => ({
-            ...lead,
-            status: 'new'
-          }))
+        const createdLeads = await Promise.all(
+          leadsData.map(lead => 
+            base44.entities.Lead.create({
+              full_name: lead.full_name,
+              email: lead.email,
+              company: lead.company || '',
+              language_preference: lead.language_preference || 'English',
+              notes: lead.notes || '',
+              status: 'new'
+            })
+          )
         );
         
-        alert(`Successfully imported ${result.output.leads.length} leads`);
+        alert(`Successfully imported ${createdLeads.length} leads!`);
         onSuccess();
         onClose();
       } else {
-        alert('Failed to extract data from file. Please check the format.');
+        alert(`Failed to extract data: ${result.details || 'Unknown error'}`);
       }
     } catch (error) {
-      alert('Import failed. Please try again.');
+      console.error('Import error:', error);
+      alert(`Import failed: ${error.message || 'Please try again'}`);
     } finally {
       setIsProcessing(false);
     }
