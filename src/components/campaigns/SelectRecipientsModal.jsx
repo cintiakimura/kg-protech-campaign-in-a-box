@@ -10,10 +10,10 @@ export default function SelectRecipientsModal({ isOpen, onClose, leads, onConfir
   if (!isOpen) return null;
 
   const toggleLead = (leadId) => {
-    setSelectedLeads(prev => 
-      prev.includes(leadId) 
-        ? prev.filter(id => id !== leadId)
-        : [...prev, leadId]
+    setSelectedLeads((prev) =>
+    prev.includes(leadId) ?
+    prev.filter((id) => id !== leadId) :
+    [...prev, leadId]
     );
   };
 
@@ -21,12 +21,12 @@ export default function SelectRecipientsModal({ isOpen, onClose, leads, onConfir
     if (selectedLeads.length === leads.length) {
       setSelectedLeads([]);
     } else {
-      setSelectedLeads(leads.map(l => l.id));
+      setSelectedLeads(leads.map((l) => l.id));
     }
   };
 
   const handleConfirm = () => {
-    const selected = leads.filter(l => selectedLeads.includes(l.id));
+    const selected = leads.filter((l) => selectedLeads.includes(l.id));
     onConfirm(selected);
   };
 
@@ -57,16 +57,16 @@ export default function SelectRecipientsModal({ isOpen, onClose, leads, onConfir
           <div className="mb-4">
             <Button
               onClick={toggleAll}
-              variant="outline"
-              className="border-[#444444] text-gray-300 hover:bg-[#333333]"
-            >
+              variant="outline" className="bg-[#00c600] text-[#212121] px-4 py-2 text-sm font-medium rounded-md inline-flex items-center justify-center gap-2 whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border shadow-sm hover:text-accent-foreground h-9 border-[#444444] hover:bg-[#333333]">
+
+
               {selectedLeads.length === leads.length ? 'Deselect All' : 'Select All'}
             </Button>
           </div>
 
           <div className="space-y-4">
-            {Object.entries(leadsByCompany).map(([company, companyLeads]) => (
-              <div key={company} className="bg-[#333333] rounded-lg p-4">
+            {Object.entries(leadsByCompany).map(([company, companyLeads]) =>
+            <div key={company} className="bg-[#333333] rounded-lg p-4">
                 <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
                   {company}
                   <Badge className="bg-[#444444] text-gray-300 border-0">
@@ -74,35 +74,35 @@ export default function SelectRecipientsModal({ isOpen, onClose, leads, onConfir
                   </Badge>
                 </h3>
                 <div className="space-y-2">
-                  {companyLeads.map(lead => (
-                    <div 
-                      key={lead.id}
-                      className="flex items-center gap-3 p-3 rounded hover:bg-[#444444] transition-colors cursor-pointer"
-                      onClick={() => toggleLead(lead.id)}
-                    >
+                  {companyLeads.map((lead) =>
+                <div
+                  key={lead.id}
+                  className="flex items-center gap-3 p-3 rounded hover:bg-[#444444] transition-colors cursor-pointer"
+                  onClick={() => toggleLead(lead.id)}>
+
                       <Checkbox
-                        checked={selectedLeads.includes(lead.id)}
-                        onCheckedChange={() => toggleLead(lead.id)}
-                        className="border-[#555555] data-[state=checked]:bg-[#00c600] data-[state=checked]:border-[#00c600]"
-                      />
+                    checked={selectedLeads.includes(lead.id)}
+                    onCheckedChange={() => toggleLead(lead.id)}
+                    className="border-[#555555] data-[state=checked]:bg-[#00c600] data-[state=checked]:border-[#00c600]" />
+
                       <div className="flex-1">
                         <p className="text-white font-medium">{lead.full_name}</p>
                         <p className="text-gray-400 text-sm">{lead.email}</p>
                       </div>
                       <Badge className={`${
-                        lead.status === 'new' ? 'bg-blue-500' :
-                        lead.status === 'contacted' ? 'bg-yellow-500' :
-                        lead.status === 'interested' ? 'bg-purple-500' :
-                        lead.status === 'scheduled' ? 'bg-orange-500' :
-                        'bg-[#00c600]'
-                      } text-white border-0`}>
+                  lead.status === 'new' ? 'bg-blue-500' :
+                  lead.status === 'contacted' ? 'bg-yellow-500' :
+                  lead.status === 'interested' ? 'bg-purple-500' :
+                  lead.status === 'scheduled' ? 'bg-orange-500' :
+                  'bg-[#00c600]'} text-white border-0`
+                  }>
                         {lead.status}
                       </Badge>
                     </div>
-                  ))}
+                )}
                 </div>
               </div>
-            ))}
+            )}
           </div>
         </div>
 
@@ -110,21 +110,21 @@ export default function SelectRecipientsModal({ isOpen, onClose, leads, onConfir
           <Button
             onClick={handleConfirm}
             disabled={selectedLeads.length === 0 || isLaunching}
-            className="flex-1 bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium"
-          >
+            className="flex-1 bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium">
+
             <Send className="w-4 h-4 mr-2" />
             {isLaunching ? 'Launching...' : `Launch to ${selectedLeads.length} Recipients`}
           </Button>
           <Button
             onClick={onClose}
-            variant="outline"
-            className="border-[#444444] text-gray-300 hover:bg-[#333333]"
-            disabled={isLaunching}
-          >
+            variant="outline" className="bg-[#00c600] text-[#212121] px-4 py-2 text-sm font-medium rounded-md inline-flex items-center justify-center gap-2 whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border shadow-sm hover:text-accent-foreground h-9 border-[#444444] hover:bg-[#333333]"
+
+            disabled={isLaunching}>
+
             Cancel
           </Button>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }
