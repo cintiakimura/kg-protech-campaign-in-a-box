@@ -27,6 +27,8 @@ export default function Campaigns() {
 
   const launchCampaignMutation = useMutation({
     mutationFn: async ({ campaign, selectedLeads }) => {
+      console.log('Starting campaign launch:', { campaign, recipientCount: selectedLeads.length });
+      
       const scheduleLink = `${window.location.origin}/ScheduleWebinar`;
       let successCount = 0;
       const errors = [];
@@ -34,13 +36,17 @@ export default function Campaigns() {
       // Send emails sequentially to avoid rate limiting and ensure delivery
       for (const recipient of selectedLeads) {
         try {
+          console.log('Sending email to:', recipient.email);
+          
           // Send actual email first
-          await base44.integrations.Core.SendEmail({
+          const emailResult = await base44.integrations.Core.SendEmail({
             from_name: 'KG PROTECH',
             to: recipient.email,
-            subject: campaign.email_subject,
-            body: `${campaign.email_body}\n\n📅 Schedule your 15-minute webinar here: ${scheduleLink}`
+            subject: campaign.email_subject || 'Campaign Email',
+            body: campaign.email_body ? `${campaign.email_body}\n\n📅 Schedule your 15-minute webinar here: ${scheduleLink}` : 'No content'
           });
+
+          console.log('Email sent successfully to:', recipient.email, emailResult);
 
           // Create email record in database after successful send
           await base44.entities.EmailMessage.create({
@@ -56,15 +62,21 @@ export default function Campaigns() {
           successCount++;
         } catch (error) {
           console.error(`Failed to send email to ${recipient.email}:`, error);
-          errors.push({ email: recipient.email, error: error.message });
+          errors.push({ email: recipient.email, error: error.message || String(error) });
         }
       }
+      
+      console.log('Campaign launch complete:', { successCount, totalCount: selectedLeads.length, errors });
       
       // Update campaign with successful sends
       await base44.entities.Campaign.update(campaign.id, {
         status: 'active',
         sent_count: (campaign.sent_count || 0) + successCount
       });
+
+      if (successCount === 0 && errors.length > 0) {
+        throw new Error(`All emails failed: ${errors[0].error}`);
+      }
 
       return { successCount, totalCount: selectedLeads.length, errors };
     },
