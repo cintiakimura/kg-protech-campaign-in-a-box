@@ -416,19 +416,17 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
             >
               Cancel
             </Button>
-          </div>
-          </div>
-
-          <CreateLeadModal
-          isOpen={isCreateLeadModalOpen}
-          onClose={() => setIsCreateLeadModalOpen(false)}
-          onSuccess={() => {
-            queryClient.invalidateQueries(['leads']);
-            setIsCreateLeadModalOpen(false);
-          }}
-          />
         </div>
       </div>
+
+      <CreateLeadModal
+        isOpen={isCreateLeadModalOpen}
+        onClose={() => setIsCreateLeadModalOpen(false)}
+        onSuccess={() => {
+          queryClient.invalidateQueries(['leads']);
+          setIsCreateLeadModalOpen(false);
+        }}
+      />
     </div>
   );
 }
