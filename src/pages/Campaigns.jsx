@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Plus, Rocket, Image as ImageIcon, Edit } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Plus, Rocket, Image as ImageIcon, Edit, Search } from 'lucide-react';
 import CreateCampaignModal from '../components/campaigns/CreateCampaignModal';
 import EditCampaignModal from '../components/campaigns/EditCampaignModal';
 import SelectRecipientsModal from '../components/campaigns/SelectRecipientsModal';
@@ -13,6 +14,7 @@ export default function Campaigns() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSelectRecipientsOpen, setIsSelectRecipientsOpen] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const queryClient = useQueryClient();
 
   const { data: campaigns = [], isLoading } = useQuery({
@@ -174,6 +176,16 @@ export default function Campaigns() {
     paused: 'bg-yellow-500'
   };
 
+  const filteredCampaigns = campaigns.filter(campaign => {
+    const query = searchQuery.toLowerCase();
+    return (
+      campaign.name?.toLowerCase().includes(query) ||
+      campaign.target_audience?.toLowerCase().includes(query) ||
+      campaign.language?.toLowerCase().includes(query) ||
+      campaign.status?.toLowerCase().includes(query)
+    );
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -190,25 +202,37 @@ export default function Campaigns() {
         </Button>
       </div>
 
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <Input
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search campaigns by name, language, target audience, or status..."
+          className="pl-10 bg-[#2a2a2a] border-[#333333] text-white"
+        />
+      </div>
+
       {isLoading ? (
         <div className="text-center py-12">
           <p className="text-gray-400">Loading campaigns...</p>
         </div>
-      ) : campaigns.length === 0 ? (
+      ) : filteredCampaigns.length === 0 ? (
         <div className="text-center py-12 bg-[#2a2a2a] rounded-xl border border-[#333333]">
           <Rocket className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-400 mb-4">No campaigns yet. Create your first campaign to get started!</p>
-          <Button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Create Campaign
-          </Button>
+          <p className="text-gray-400 mb-4">{searchQuery ? 'No campaigns found matching your search' : 'No campaigns yet. Create your first campaign to get started!'}</p>
+          {!searchQuery && (
+            <Button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Create Campaign
+            </Button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {campaigns.map(campaign => (
+          {filteredCampaigns.map(campaign => (
             <div key={campaign.id} className="bg-[#2a2a2a] rounded-xl border border-[#333333] overflow-hidden hover:border-[#00c600] transition-all">
               {campaign.media_url || campaign.generated_image_url ? (
                 <>
