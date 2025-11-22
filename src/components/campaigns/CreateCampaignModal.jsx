@@ -69,10 +69,13 @@ Return the result in the following JSON format:
         }
       });
 
+      const scheduleLink = `${window.location.origin}/ScheduleWebinar`;
+      const emailBodyWithLink = `${result.body}\n\n📅 Schedule your 15-minute webinar here: ${scheduleLink}`;
+
       setFormData(prev => ({
         ...prev,
         email_subject: result.subject,
-        email_body: result.body
+        email_body: emailBodyWithLink
       }));
     } catch (error) {
       alert('Failed to generate copy. Please try again.');
