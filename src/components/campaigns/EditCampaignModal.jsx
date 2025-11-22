@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Sparkles, Image as ImageIcon, Send, Upload, Trash2, Save } from 'lucide-react';
+import { X, Sparkles, Image as ImageIcon, Send, Upload, Trash2, Save, Rocket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { base44 } from '@/api/base44Client';
 
-export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess }) {
+export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess, onLaunchClick }) {
   const [formData, setFormData] = useState({
     name: '',
     language: 'English',
@@ -172,6 +172,11 @@ Return the result in the following JSON format:
     } catch (error) {
       alert('Failed to update campaign');
     }
+  };
+
+  const handleLaunch = async () => {
+    await handleSubmit();
+    onLaunchClick({ ...campaign, ...formData });
   };
 
   return (
@@ -384,6 +389,16 @@ Return the result in the following JSON format:
               <Save className="w-4 h-4 mr-2" />
               Save Changes
             </Button>
+            {campaign?.status === 'draft' && (
+              <Button
+                onClick={handleLaunch}
+                className="flex-1 bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium"
+                disabled={!formData.name}
+              >
+                <Rocket className="w-4 h-4 mr-2" />
+                Select Recipients & Launch
+              </Button>
+            )}
             <Button
               onClick={onClose}
               variant="outline"

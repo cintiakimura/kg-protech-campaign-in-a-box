@@ -82,6 +82,12 @@ export default function Campaigns() {
     setIsEditModalOpen(true);
   };
 
+  const handleLaunchFromEdit = (campaign) => {
+    setSelectedCampaign(campaign);
+    setIsEditModalOpen(false);
+    setIsSelectRecipientsOpen(true);
+  };
+
   const statusColors = {
     draft: 'bg-gray-500',
     active: 'bg-[#00c600]',
@@ -224,6 +230,7 @@ export default function Campaigns() {
         }}
         campaign={selectedCampaign}
         onSuccess={() => queryClient.invalidateQueries(['campaigns'])}
+        onLaunchClick={handleLaunchFromEdit}
       />
 
       <SelectRecipientsModal
