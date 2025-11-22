@@ -29,32 +29,27 @@ export default function Campaigns() {
     mutationFn: async ({ campaign, selectedLeads }) => {
       const scheduleLink = `${window.location.origin}/ScheduleWebinar`;
       
-      // Send actual emails via integration to all recipients
-      const sendPromises = selectedLeads.map(async (recipient) => {
-        try {
-          // Create email record in database
-          await base44.entities.EmailMessage.create({
-            subject: campaign.email_subject,
-            body: `${campaign.email_body}\n\n📅 Schedule your 15-minute webinar here: ${scheduleLink}`,
-            from_email: 'campaigns@kgprotech.com',
-            to_email: recipient.email,
-            folder: 'sent',
-            is_read: true,
-            date: new Date().toISOString()
-          });
+      // Send emails sequentially to avoid rate limiting and ensure delivery
+      for (const recipient of selectedLeads) {
+        // Send actual email first
+        await base44.integrations.Core.SendEmail({
+          from_name: 'KG PROTECH',
+          to: recipient.email,
+          subject: campaign.email_subject,
+          body: `${campaign.email_body}\n\n📅 Schedule your 15-minute webinar here: ${scheduleLink}`
+        });
 
-          // Send actual email
-          await base44.integrations.Core.SendEmail({
-            to: recipient.email,
-            subject: campaign.email_subject,
-            body: `${campaign.email_body}\n\n📅 Schedule your 15-minute webinar here: ${scheduleLink}`
-          });
-        } catch (error) {
-          console.error(`Failed to send email to ${recipient.email}:`, error);
-        }
-      });
-      
-      await Promise.all(sendPromises);
+        // Create email record in database after successful send
+        await base44.entities.EmailMessage.create({
+          subject: campaign.email_subject,
+          body: `${campaign.email_body}\n\n📅 Schedule your 15-minute webinar here: ${scheduleLink}`,
+          from_email: 'campaigns@kgprotech.com',
+          to_email: recipient.email,
+          folder: 'sent',
+          is_read: true,
+          date: new Date().toISOString()
+        });
+      }
       
       // Update campaign
       return base44.entities.Campaign.update(campaign.id, {
