@@ -7,16 +7,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { base44 } from '@/api/base44Client';
 
-export default function CreateLeadModal({ isOpen, onClose, onSuccess }) {
+export default function CreateLeadModal({ isOpen, onClose, onSuccess, prefilledClientId = null }) {
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
     company: '',
+    client_id: prefilledClientId || '',
     status: 'new',
     language_preference: 'English',
     notes: ''
   });
   const [isSaving, setIsSaving] = useState(false);
+
+  React.useEffect(() => {
+    if (prefilledClientId) {
+      setFormData(prev => ({ ...prev, client_id: prefilledClientId }));
+    }
+  }, [prefilledClientId]);
 
   if (!isOpen) return null;
 
@@ -36,6 +43,7 @@ export default function CreateLeadModal({ isOpen, onClose, onSuccess }) {
         full_name: '',
         email: '',
         company: '',
+        client_id: prefilledClientId || '',
         status: 'new',
         language_preference: 'English',
         notes: ''

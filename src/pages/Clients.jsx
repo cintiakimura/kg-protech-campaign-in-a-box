@@ -16,6 +16,7 @@ export default function Clients() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   const [isCreateLeadModalOpen, setIsCreateLeadModalOpen] = useState(false);
+  const [selectedClientForLead, setSelectedClientForLead] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const queryClient = useQueryClient();
 
@@ -104,6 +105,11 @@ export default function Clients() {
   const handleEditClient = (client) => {
     setSelectedClient(client);
     setIsEditModalOpen(true);
+  };
+
+  const handleAddLeadToClient = (client) => {
+    setSelectedClientForLead(client);
+    setIsCreateLeadModalOpen(true);
   };
 
   return (
@@ -258,8 +264,12 @@ export default function Clients() {
 
       <CreateLeadModal
         isOpen={isCreateLeadModalOpen}
-        onClose={() => setIsCreateLeadModalOpen(false)}
+        onClose={() => {
+          setIsCreateLeadModalOpen(false);
+          setSelectedClientForLead(null);
+        }}
         onSuccess={() => queryClient.invalidateQueries(['leads'])}
+        prefilledClientId={selectedClientForLead?.id}
       />
     </div>
   );
