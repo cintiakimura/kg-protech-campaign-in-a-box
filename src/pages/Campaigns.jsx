@@ -29,29 +29,32 @@ export default function Campaigns() {
     mutationFn: async ({ campaign, selectedLeads }) => {
       const scheduleLink = `${window.location.origin}/ScheduleWebinar`;
       
-      // Send emails to all recipients (both leads and manual emails)
-      const emailPromises = selectedLeads.map(recipient => 
-        base44.entities.EmailMessage.create({
-          subject: campaign.email_subject,
-          body: `${campaign.email_body}\n\n📅 Schedule your 15-minute webinar here: ${scheduleLink}`,
-          from_email: 'campaigns@kgprotech.com',
-          to_email: recipient.email,
-          folder: 'sent',
-          is_read: true,
-          date: new Date().toISOString()
-        })
-      );
-      
-      await Promise.all(emailPromises);
-
       // Send actual emails via integration to all recipients
-      for (const recipient of selectedLeads) {
-        await base44.integrations.Core.SendEmail({
-          to: recipient.email,
-          subject: campaign.email_subject,
-          body: `${campaign.email_body}\n\n📅 Schedule your 15-minute webinar here: ${scheduleLink}`
-        });
-      }
+      const sendPromises = selectedLeads.map(async (recipient) => {
+        try {
+          // Create email record in database
+          await base44.entities.EmailMessage.create({
+            subject: campaign.email_subject,
+            body: `${campaign.email_body}\n\n📅 Schedule your 15-minute webinar here: ${scheduleLink}`,
+            from_email: 'campaigns@kgprotech.com',
+            to_email: recipient.email,
+            folder: 'sent',
+            is_read: true,
+            date: new Date().toISOString()
+          });
+
+          // Send actual email
+          await base44.integrations.Core.SendEmail({
+            to: recipient.email,
+            subject: campaign.email_subject,
+            body: `${campaign.email_body}\n\n📅 Schedule your 15-minute webinar here: ${scheduleLink}`
+          });
+        } catch (error) {
+          console.error(`Failed to send email to ${recipient.email}:`, error);
+        }
+      });
+      
+      await Promise.all(sendPromises);
       
       // Update campaign
       return base44.entities.Campaign.update(campaign.id, {
@@ -65,6 +68,10 @@ export default function Campaigns() {
       setIsSelectRecipientsOpen(false);
       setSelectedCampaign(null);
       alert('Campaign launched successfully!');
+    },
+    onError: (error) => {
+      console.error('Campaign launch failed:', error);
+      alert('Failed to launch campaign. Please check the console for details.');
     }
   });
 
