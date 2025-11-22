@@ -3,9 +3,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Upload, Search, Mail, Calendar as CalendarIcon } from 'lucide-react';
+import { Plus, Upload, Search, Mail, Calendar as CalendarIcon, Edit } from 'lucide-react';
 import ImportLeadsModal from '../components/leads/ImportLeadsModal';
 import CreateLeadModal from '../components/leads/CreateLeadModal';
+import EditLeadModal from '../components/leads/EditLeadModal';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -19,6 +20,8 @@ import {
 export default function Leads() {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedLead, setSelectedLead] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const queryClient = useQueryClient();
 
@@ -117,6 +120,17 @@ export default function Leads() {
                         <Button
                           size="sm"
                           variant="ghost"
+                          onClick={() => {
+                            setSelectedLead(lead);
+                            setIsEditModalOpen(true);
+                          }}
+                          className="text-[#00c600] hover:text-[#00dd00] hover:bg-[#00c600]/10"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
                           className="text-[#00c600] hover:text-[#00dd00] hover:bg-[#00c600]/10"
                         >
                           <Mail className="w-4 h-4" />
@@ -147,6 +161,16 @@ export default function Leads() {
       <CreateLeadModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={() => queryClient.invalidateQueries(['leads'])}
+      />
+
+      <EditLeadModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedLead(null);
+        }}
+        lead={selectedLead}
         onSuccess={() => queryClient.invalidateQueries(['leads'])}
       />
     </div>
