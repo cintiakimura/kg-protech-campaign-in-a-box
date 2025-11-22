@@ -28,34 +28,45 @@ export default function Campaigns() {
   const launchCampaignMutation = useMutation({
     mutationFn: async ({ campaign, selectedLeads }) => {
       const scheduleLink = `${window.location.origin}/ScheduleWebinar`;
+      let successCount = 0;
+      const errors = [];
       
       // Send emails sequentially to avoid rate limiting and ensure delivery
       for (const recipient of selectedLeads) {
-        // Send actual email first
-        await base44.integrations.Core.SendEmail({
-          from_name: 'KG PROTECH',
-          to: recipient.email,
-          subject: campaign.email_subject,
-          body: `${campaign.email_body}\n\n📅 Schedule your 15-minute webinar here: ${scheduleLink}`
-        });
+        try {
+          // Send actual email first
+          await base44.integrations.Core.SendEmail({
+            from_name: 'KG PROTECH',
+            to: recipient.email,
+            subject: campaign.email_subject,
+            body: `${campaign.email_body}\n\n📅 Schedule your 15-minute webinar here: ${scheduleLink}`
+          });
 
-        // Create email record in database after successful send
-        await base44.entities.EmailMessage.create({
-          subject: campaign.email_subject,
-          body: `${campaign.email_body}\n\n📅 Schedule your 15-minute webinar here: ${scheduleLink}`,
-          from_email: 'campaigns@kgprotech.com',
-          to_email: recipient.email,
-          folder: 'sent',
-          is_read: true,
-          date: new Date().toISOString()
-        });
+          // Create email record in database after successful send
+          await base44.entities.EmailMessage.create({
+            subject: campaign.email_subject,
+            body: `${campaign.email_body}\n\n📅 Schedule your 15-minute webinar here: ${scheduleLink}`,
+            from_email: 'campaigns@kgprotech.com',
+            to_email: recipient.email,
+            folder: 'sent',
+            is_read: true,
+            date: new Date().toISOString()
+          });
+
+          successCount++;
+        } catch (error) {
+          console.error(`Failed to send email to ${recipient.email}:`, error);
+          errors.push({ email: recipient.email, error: error.message });
+        }
       }
       
-      // Update campaign
-      return base44.entities.Campaign.update(campaign.id, {
+      // Update campaign with successful sends
+      await base44.entities.Campaign.update(campaign.id, {
         status: 'active',
-        sent_count: (campaign.sent_count || 0) + selectedLeads.length
+        sent_count: (campaign.sent_count || 0) + successCount
       });
+
+      return { successCount, totalCount: selectedLeads.length, errors };
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries(['campaigns']);
