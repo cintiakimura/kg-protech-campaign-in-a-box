@@ -214,7 +214,7 @@ export default function Clients() {
                   <Progress value={progress} className="h-2 bg-[#333333]" />
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 mb-4">
                   {checklistSteps.map(step => {
                     const isChecked = client.checklist?.[step.key] || false;
                     return (
@@ -240,6 +240,14 @@ export default function Clients() {
                     );
                   })}
                 </div>
+
+                <Button
+                  onClick={() => handleAddLeadToClient(client)}
+                  className="w-full bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium"
+                >
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Add Lead to Client
+                </Button>
               </div>
             );
           })}
