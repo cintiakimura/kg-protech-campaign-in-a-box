@@ -14,8 +14,10 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
     target_audience: '',
     email_subject: '',
     email_body: '',
-    generated_image_url: ''
+    media_type: '',
+    media_url: ''
   });
+  const [videoUrl, setVideoUrl] = useState('');
   
   React.useEffect(() => {
     if (campaign) {
@@ -25,8 +27,12 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
         target_audience: campaign.target_audience || '',
         email_subject: campaign.email_subject || '',
         email_body: campaign.email_body || '',
-        generated_image_url: campaign.generated_image_url || ''
+        media_type: campaign.media_type || '',
+        media_url: campaign.media_url || campaign.generated_image_url || ''
       });
+      if (campaign.media_type === 'video_url') {
+        setVideoUrl(campaign.media_url || '');
+      }
     }
   }, [campaign]);
   const [isGeneratingCopy, setIsGeneratingCopy] = useState(false);
@@ -42,13 +48,24 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
     
     setIsGeneratingCopy(true);
     try {
-      const prompt = `Create a professional marketing email for an IoT automotive training solution provider (KG PROTECH).
-      
+      const prompt = `Create a cold email for KG PROTECH, an IoT automotive training solution provider.
+
 Campaign Name: ${formData.name}
 Target Audience: ${formData.target_audience}
 Language: ${formData.language}
 
-Generate a compelling email subject line and body that highlights the benefits of IoT automotive training solutions, includes a clear call-to-action, and maintains a professional yet engaging tone.
+The email should be:
+- Concise and direct (3-4 short paragraphs maximum)
+- Clear intention: schedule a webinar to demonstrate IoT automotive training solutions
+- Professional but personal tone
+- Include a clear call-to-action to schedule a webinar meeting
+
+End with this exact signature:
+Best regards,
+Cintia Kimura
+Founder and COO
+cintia@kgprotech.com
+Tel: +33 07 68 62 07 04
 
 Return the result in the following JSON format:
 {
@@ -95,7 +112,8 @@ Return the result in the following JSON format:
 
       setFormData(prev => ({
         ...prev,
-        generated_image_url: result.url
+        media_type: 'image',
+        media_url: result.url
       }));
     } catch (error) {
       alert('Failed to generate image. Please try again.');
@@ -104,7 +122,7 @@ Return the result in the following JSON format:
     }
   };
 
-  const handleImageUpload = async (e) => {
+  const handleMediaUpload = async (e, type) => {
     const file = e.target.files[0];
     if (!file) return;
     
@@ -113,19 +131,34 @@ Return the result in the following JSON format:
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setFormData(prev => ({
         ...prev,
-        generated_image_url: file_url
+        media_type: type,
+        media_url: file_url
       }));
     } catch (error) {
-      alert('Failed to upload image. Please try again.');
+      alert('Failed to upload file. Please try again.');
     } finally {
       setIsGeneratingImage(false);
     }
   };
 
-  const handleDeleteImage = () => {
+  const handleDeleteMedia = () => {
     setFormData(prev => ({
       ...prev,
-      generated_image_url: ''
+      media_type: '',
+      media_url: ''
+    }));
+    setVideoUrl('');
+  };
+
+  const handleAddVideoUrl = () => {
+    if (!videoUrl.trim()) {
+      alert('Please enter a video URL');
+      return;
+    }
+    setFormData(prev => ({
+      ...prev,
+      media_type: 'video_url',
+      media_url: videoUrl
     }));
   };
 
@@ -220,7 +253,7 @@ Return the result in the following JSON format:
               <input
                 type="file"
                 accept="image/*"
-                onChange={handleImageUpload}
+                onChange={(e) => handleMediaUpload(e, 'image')}
                 className="hidden"
                 id="edit-image-upload"
                 disabled={isGeneratingImage}
@@ -233,6 +266,26 @@ Return the result in the following JSON format:
                 >
                   <Upload className="w-4 h-4 mr-2" />
                   Upload Image
+                </Button>
+              </label>
+            </div>
+            <div>
+              <input
+                type="file"
+                accept=".pdf,.ppt,.pptx"
+                onChange={(e) => handleMediaUpload(e, 'presentation')}
+                className="hidden"
+                id="edit-presentation-upload"
+                disabled={isGeneratingImage}
+              />
+              <label htmlFor="edit-presentation-upload">
+                <Button
+                  as="span"
+                  disabled={isGeneratingImage}
+                  className="bg-[#333333] hover:bg-[#444444] text-white cursor-pointer"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload Presentation
                 </Button>
               </label>
             </div>
@@ -259,12 +312,33 @@ Return the result in the following JSON format:
             />
           </div>
 
-          {formData.generated_image_url && (
+          <div>
+            <Label className="text-gray-300 mb-2">Video URL (YouTube, Vimeo, etc.)</Label>
+            <div className="flex gap-2">
+              <Input
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder="https://youtube.com/watch?v=..."
+                className="bg-[#333333] border-[#444444] text-white"
+              />
+              <Button
+                onClick={handleAddVideoUrl}
+                className="bg-[#333333] hover:bg-[#444444] text-white"
+              >
+                Add
+              </Button>
+            </div>
+          </div>
+
+          {formData.media_url && (
             <div>
               <div className="flex items-center justify-between mb-2">
-                <Label className="text-gray-300">Campaign Image</Label>
+                <Label className="text-gray-300">
+                  Campaign {formData.media_type === 'image' ? 'Image' : 
+                           formData.media_type === 'presentation' ? 'Presentation' : 'Video'}
+                </Label>
                 <Button
-                  onClick={handleDeleteImage}
+                  onClick={handleDeleteMedia}
                   size="sm"
                   variant="ghost"
                   className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
@@ -273,11 +347,29 @@ Return the result in the following JSON format:
                   Delete
                 </Button>
               </div>
-              <img 
-                src={formData.generated_image_url} 
-                alt="Campaign" 
-                className="w-full rounded-lg border-2 border-[#00c600]"
-              />
+              {formData.media_type === 'image' && (
+                <img 
+                  src={formData.media_url} 
+                  alt="Campaign" 
+                  className="w-full rounded-lg border-2 border-[#00c600]"
+                />
+              )}
+              {formData.media_type === 'presentation' && (
+                <div className="p-4 bg-[#333333] rounded-lg border-2 border-[#00c600] text-center">
+                  <p className="text-white">📄 Presentation attached</p>
+                  <a href={formData.media_url} target="_blank" rel="noopener noreferrer" className="text-[#00c600] text-sm">
+                    View file
+                  </a>
+                </div>
+              )}
+              {formData.media_type === 'video_url' && (
+                <div className="p-4 bg-[#333333] rounded-lg border-2 border-[#00c600]">
+                  <p className="text-white mb-2">🎥 Video URL:</p>
+                  <a href={formData.media_url} target="_blank" rel="noopener noreferrer" className="text-[#00c600] text-sm break-all">
+                    {formData.media_url}
+                  </a>
+                </div>
+              )}
             </div>
           )}
 

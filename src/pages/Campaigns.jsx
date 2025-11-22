@@ -114,12 +114,32 @@ export default function Campaigns() {
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {campaigns.map(campaign => (
             <div key={campaign.id} className="bg-[#2a2a2a] rounded-xl border border-[#333333] overflow-hidden hover:border-[#00c600] transition-all">
-              {campaign.generated_image_url ? (
-                <img 
-                  src={campaign.generated_image_url} 
-                  alt={campaign.name}
-                  className="w-full h-48 object-cover"
-                />
+              {campaign.media_url || campaign.generated_image_url ? (
+                <>
+                  {(campaign.media_type === 'image' || campaign.generated_image_url) && (
+                    <img 
+                      src={campaign.media_url || campaign.generated_image_url} 
+                      alt={campaign.name}
+                      className="w-full h-48 object-cover"
+                    />
+                  )}
+                  {campaign.media_type === 'presentation' && (
+                    <div className="w-full h-48 bg-[#333333] flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="text-6xl mb-2">📄</div>
+                        <p className="text-gray-400 text-sm">Presentation attached</p>
+                      </div>
+                    </div>
+                  )}
+                  {campaign.media_type === 'video_url' && (
+                    <div className="w-full h-48 bg-[#333333] flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="text-6xl mb-2">🎥</div>
+                        <p className="text-gray-400 text-sm">Video URL attached</p>
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="w-full h-48 bg-[#333333] flex items-center justify-center">
                   <ImageIcon className="w-12 h-12 text-gray-600" />
