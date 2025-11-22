@@ -27,11 +27,13 @@ export default function Campaigns() {
 
   const launchCampaignMutation = useMutation({
     mutationFn: async ({ campaign, selectedLeads }) => {
+      const scheduleLink = `${window.location.origin}/ScheduleWebinar`;
+      
       // Send emails to selected leads
       const emailPromises = selectedLeads.map(lead => 
         base44.entities.EmailMessage.create({
           subject: campaign.email_subject,
-          body: campaign.email_body,
+          body: `${campaign.email_body}\n\n📅 Schedule your 15-minute webinar here: ${scheduleLink}`,
           from_email: 'campaigns@kgprotech.com',
           to_email: lead.email,
           folder: 'sent',
@@ -41,6 +43,15 @@ export default function Campaigns() {
       );
       
       await Promise.all(emailPromises);
+
+      // Send actual emails via integration
+      for (const lead of selectedLeads) {
+        await base44.integrations.Core.SendEmail({
+          to: lead.email,
+          subject: campaign.email_subject,
+          body: `${campaign.email_body}\n\n📅 Schedule your 15-minute webinar here: ${scheduleLink}`
+        });
+      }
       
       // Update campaign
       return base44.entities.Campaign.update(campaign.id, {

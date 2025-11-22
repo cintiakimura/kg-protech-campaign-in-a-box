@@ -5,6 +5,7 @@ import Clients from './pages/Clients';
 import Calendar from './pages/Calendar';
 import Webmail from './pages/Webmail';
 import Statistics from './pages/Statistics';
+import ScheduleWebinar from './pages/ScheduleWebinar';
 import __Layout from './Layout.jsx';
 
 
@@ -16,6 +17,7 @@ export const PAGES = {
     "Calendar": Calendar,
     "Webmail": Webmail,
     "Statistics": Statistics,
+    "ScheduleWebinar": ScheduleWebinar,
 }
 
 export const pagesConfig = {
