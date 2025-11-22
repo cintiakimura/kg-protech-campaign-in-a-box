@@ -40,12 +40,15 @@ export default function Campaigns() {
         try {
           console.log('Sending email to:', recipient.email);
           
-          // Send actual email first
+          // Send actual email first with HTML clickable link
+          const emailBody = campaign.email_body || '';
+          const htmlBody = `${emailBody.replace(/\n/g, '<br>')}<br><br>📅 <a href="${scheduleLink}" style="color: #00c600; text-decoration: underline;">Schedule your 15-minute webinar here</a>`;
+          
           const emailResult = await base44.integrations.Core.SendEmail({
             from_name: 'KG PROTECH',
             to: recipient.email,
             subject: campaign.email_subject || 'Campaign Email',
-            body: campaign.email_body ? `${campaign.email_body}\n\n📅 Schedule your 15-minute webinar here: ${scheduleLink}` : 'No content'
+            body: htmlBody
           });
 
           console.log('Email sent successfully to:', recipient.email, emailResult);
@@ -53,7 +56,7 @@ export default function Campaigns() {
           // Create email record in database after successful send
           await base44.entities.EmailMessage.create({
             subject: campaign.email_subject,
-            body: `${campaign.email_body}\n\n📅 Schedule your 15-minute webinar here: ${scheduleLink}`,
+            body: htmlBody,
             from_email: 'campaigns@kgprotech.com',
             to_email: recipient.email,
             folder: 'sent',
