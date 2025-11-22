@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { X, Send } from 'lucide-react';
+import { X, Send, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 
 export default function SelectRecipientsModal({ isOpen, onClose, leads, onConfirm, isLaunching }) {
   const [selectedLeads, setSelectedLeads] = useState([]);
+  const [manualEmails, setManualEmails] = useState([]);
+  const [emailInput, setEmailInput] = useState('');
 
   if (!isOpen) return null;
 
@@ -25,9 +28,33 @@ export default function SelectRecipientsModal({ isOpen, onClose, leads, onConfir
     }
   };
 
+  const addManualEmail = () => {
+    const email = emailInput.trim();
+    if (!email) return;
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      alert('Please enter a valid email address');
+      return;
+    }
+    
+    if (manualEmails.includes(email)) {
+      alert('This email is already added');
+      return;
+    }
+    
+    setManualEmails([...manualEmails, email]);
+    setEmailInput('');
+  };
+
+  const removeManualEmail = (email) => {
+    setManualEmails(manualEmails.filter(e => e !== email));
+  };
+
   const handleConfirm = () => {
     const selected = leads.filter((l) => selectedLeads.includes(l.id));
-    onConfirm(selected);
+    const manualRecipients = manualEmails.map(email => ({ email, full_name: email }));
+    onConfirm([...selected, ...manualRecipients]);
   };
 
   // Group leads by company
@@ -45,7 +72,7 @@ export default function SelectRecipientsModal({ isOpen, onClose, leads, onConfir
           <div>
             <h2 className="text-xl font-bold text-white">Select Recipients</h2>
             <p className="text-gray-400 text-sm mt-1">
-              {selectedLeads.length} of {leads.length} leads selected
+              {selectedLeads.length} leads + {manualEmails.length} manual recipients
             </p>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
@@ -54,12 +81,49 @@ export default function SelectRecipientsModal({ isOpen, onClose, leads, onConfir
         </div>
 
         <div className="flex-1 overflow-y-auto scrollbar-custom p-6">
+          <div className="mb-6 p-4 bg-[#333333] rounded-lg">
+            <h3 className="text-white font-semibold mb-3">Add Recipients Manually</h3>
+            <div className="flex gap-2 mb-3">
+              <Input
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && addManualEmail()}
+                placeholder="Enter email address..."
+                className="bg-[#2a2a2a] border-[#444444] text-white"
+              />
+              <Button
+                onClick={addManualEmail}
+                className="bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add
+              </Button>
+            </div>
+            {manualEmails.length > 0 && (
+              <div className="space-y-2">
+                {manualEmails.map((email) => (
+                  <div key={email} className="flex items-center justify-between p-2 bg-[#2a2a2a] rounded">
+                    <span className="text-white text-sm">{email}</span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => removeManualEmail(email)}
+                      className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="mb-4">
             <Button
               onClick={toggleAll}
-              variant="outline" className="bg-[#00c600] text-[#212121] px-4 py-2 text-sm font-medium rounded-md inline-flex items-center justify-center gap-2 whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border shadow-sm hover:text-accent-foreground h-9 border-[#444444] hover:bg-[#333333]">
-
-
+              variant="outline"
+              className="border-[#444444] text-gray-300 hover:bg-[#333333]"
+            >
               {selectedLeads.length === leads.length ? 'Deselect All' : 'Select All'}
             </Button>
           </div>
@@ -109,11 +173,11 @@ export default function SelectRecipientsModal({ isOpen, onClose, leads, onConfir
         <div className="border-t border-[#333333] p-6 flex gap-3">
           <Button
             onClick={handleConfirm}
-            disabled={selectedLeads.length === 0 || isLaunching}
-            className="flex-1 bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium">
-
+            disabled={(selectedLeads.length === 0 && manualEmails.length === 0) || isLaunching}
+            className="flex-1 bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium"
+          >
             <Send className="w-4 h-4 mr-2" />
-            {isLaunching ? 'Launching...' : `Launch to ${selectedLeads.length} Recipients`}
+            {isLaunching ? 'Launching...' : `Launch to ${selectedLeads.length + manualEmails.length} Recipients`}
           </Button>
           <Button
             onClick={onClose}
