@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import { X, Send, Plus } from 'lucide-react';
+import { X, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import CreateLeadModal from '../leads/CreateLeadModal';
 
-export default function SelectRecipientsModal({ isOpen, onClose, leads, onConfirm, isLaunching, onLeadCreated }) {
+export default function SelectRecipientsModal({ isOpen, onClose, leads, onConfirm, isLaunching }) {
   const [selectedLeads, setSelectedLeads] = useState([]);
-  const [isCreateLeadModalOpen, setIsCreateLeadModalOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -56,20 +54,13 @@ export default function SelectRecipientsModal({ isOpen, onClose, leads, onConfir
         </div>
 
         <div className="flex-1 overflow-y-auto scrollbar-custom p-6">
-          <div className="mb-4 flex gap-3">
+          <div className="mb-4">
             <Button
               onClick={toggleAll}
-              variant="outline"
-              className="border-[#444444] text-gray-300 hover:bg-[#333333]"
-            >
+              variant="outline" className="bg-[#00c600] text-[#212121] px-4 py-2 text-sm font-medium rounded-md inline-flex items-center justify-center gap-2 whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border shadow-sm hover:text-accent-foreground h-9 border-[#444444] hover:bg-[#333333]">
+
+
               {selectedLeads.length === leads.length ? 'Deselect All' : 'Select All'}
-            </Button>
-            <Button
-              onClick={() => setIsCreateLeadModalOpen(true)}
-              className="bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add New Lead
             </Button>
           </div>
 
@@ -132,17 +123,8 @@ export default function SelectRecipientsModal({ isOpen, onClose, leads, onConfir
 
             Cancel
           </Button>
-          </div>
-          </div>
+        </div>
+      </div>
+    </div>);
 
-          <CreateLeadModal
-          isOpen={isCreateLeadModalOpen}
-          onClose={() => setIsCreateLeadModalOpen(false)}
-          onSuccess={() => {
-          setIsCreateLeadModalOpen(false);
-          if (onLeadCreated) onLeadCreated();
-          }}
-          />
-          </div>);
-
-          }
+}
