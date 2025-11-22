@@ -62,16 +62,66 @@ export default function Campaigns() {
         sent_count: (campaign.sent_count || 0) + selectedLeads.length
       });
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries(['campaigns']);
       queryClient.invalidateQueries(['emails']);
       setIsSelectRecipientsOpen(false);
-      setSelectedCampaign(null);
-      alert('Campaign launched successfully!');
+      
+      // Show success popup
+      const successMessage = document.createElement('div');
+      successMessage.innerHTML = `
+        <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                    background: #2a2a2a; border: 2px solid #00c600; border-radius: 12px; 
+                    padding: 32px; z-index: 9999; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+                    text-align: center; min-width: 400px;">
+          <div style="font-size: 48px; margin-bottom: 16px;">✅</div>
+          <h2 style="color: white; font-size: 24px; font-weight: bold; margin-bottom: 12px;">
+            Campaign Sent Successfully!
+          </h2>
+          <p style="color: #00c600; font-size: 18px; margin-bottom: 8px;">
+            ${variables.selectedLeads.length} emails sent
+          </p>
+          <p style="color: #888; font-size: 14px;">
+            Campaign "${variables.campaign.name}" has been launched
+          </p>
+        </div>
+        <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9998;"></div>
+      `;
+      document.body.appendChild(successMessage);
+      
+      setTimeout(() => {
+        document.body.removeChild(successMessage);
+        setSelectedCampaign(null);
+      }, 3000);
     },
     onError: (error) => {
       console.error('Campaign launch failed:', error);
-      alert('Failed to launch campaign. Please check the console for details.');
+      
+      // Show error popup
+      const errorMessage = document.createElement('div');
+      errorMessage.innerHTML = `
+        <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                    background: #2a2a2a; border: 2px solid #ff4444; border-radius: 12px; 
+                    padding: 32px; z-index: 9999; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+                    text-align: center; min-width: 400px;">
+          <div style="font-size: 48px; margin-bottom: 16px;">❌</div>
+          <h2 style="color: white; font-size: 24px; font-weight: bold; margin-bottom: 12px;">
+            Campaign Failed to Send
+          </h2>
+          <p style="color: #ff4444; font-size: 16px;">
+            Please try again or contact support
+          </p>
+        </div>
+        <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9998;" 
+             onclick="this.parentElement.remove()"></div>
+      `;
+      document.body.appendChild(errorMessage);
+      
+      setTimeout(() => {
+        if (document.body.contains(errorMessage)) {
+          document.body.removeChild(errorMessage);
+        }
+      }, 4000);
     }
   });
 

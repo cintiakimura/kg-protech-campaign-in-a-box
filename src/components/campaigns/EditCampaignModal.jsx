@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { X, Sparkles, Image as ImageIcon, Send, Upload, Trash2, Save, Rocket } from 'lucide-react';
+import { X, Sparkles, Image as ImageIcon, Send, Upload, Trash2, Save, Rocket, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { base44 } from '@/api/base44Client';
+import CreateLeadModal from '../leads/CreateLeadModal';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess, onLaunchClick }) {
   const [formData, setFormData] = useState({
@@ -18,6 +20,8 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
     media_url: ''
   });
   const [videoUrl, setVideoUrl] = useState('');
+  const [isCreateLeadModalOpen, setIsCreateLeadModalOpen] = useState(false);
+  const queryClient = useQueryClient();
   
   React.useEffect(() => {
     if (campaign) {
@@ -381,6 +385,13 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
 
           <div className="flex gap-3 pt-4 border-t border-[#333333]">
             <Button
+              onClick={() => setIsCreateLeadModalOpen(true)}
+              className="bg-[#333333] hover:bg-[#444444] text-white"
+            >
+              <UserPlus className="w-4 h-4 mr-2" />
+              Add Lead
+            </Button>
+            <Button
               onClick={handleSubmit}
               className="flex-1 bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium"
               disabled={!formData.name}
@@ -388,7 +399,7 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
               <Save className="w-4 h-4 mr-2" />
               Save Changes
             </Button>
-            {campaign?.status === 'draft' && (
+            {(campaign?.status === 'draft' || campaign?.status === 'active') && (
               <Button
                 onClick={handleLaunch}
                 className="flex-1 bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium"
@@ -406,6 +417,16 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
               Cancel
             </Button>
           </div>
+          </div>
+
+          <CreateLeadModal
+          isOpen={isCreateLeadModalOpen}
+          onClose={() => setIsCreateLeadModalOpen(false)}
+          onSuccess={() => {
+            queryClient.invalidateQueries(['leads']);
+            setIsCreateLeadModalOpen(false);
+          }}
+          />
         </div>
       </div>
     </div>
