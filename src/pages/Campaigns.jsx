@@ -73,32 +73,36 @@ export default function Campaigns() {
       queryClient.invalidateQueries(['emails']);
       setIsSelectRecipientsOpen(false);
       
-      // Show success popup
+      // Show success popup with details
       const successMessage = document.createElement('div');
+      const hasErrors = data.errors && data.errors.length > 0;
       successMessage.innerHTML = `
         <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-                    background: #2a2a2a; border: 2px solid #00c600; border-radius: 12px; 
+                    background: #2a2a2a; border: 2px solid ${hasErrors ? '#ff9900' : '#00c600'}; border-radius: 12px; 
                     padding: 32px; z-index: 9999; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-                    text-align: center; min-width: 400px;">
-          <div style="font-size: 48px; margin-bottom: 16px;">✅</div>
+                    text-align: center; min-width: 400px; max-width: 500px;">
+          <div style="font-size: 48px; margin-bottom: 16px;">${hasErrors ? '⚠️' : '✅'}</div>
           <h2 style="color: white; font-size: 24px; font-weight: bold; margin-bottom: 12px;">
-            Campaign Sent Successfully!
+            ${hasErrors ? 'Campaign Partially Sent' : 'Campaign Sent Successfully!'}
           </h2>
-          <p style="color: #00c600; font-size: 18px; margin-bottom: 8px;">
-            ${variables.selectedLeads.length} emails sent
+          <p style="color: ${hasErrors ? '#ff9900' : '#00c600'}; font-size: 18px; margin-bottom: 8px;">
+            ${data.successCount} of ${data.totalCount} emails sent
           </p>
+          ${hasErrors ? `<p style="color: #ff4444; font-size: 14px; margin-bottom: 8px;">${data.errors.length} failed</p>` : ''}
           <p style="color: #888; font-size: 14px;">
             Campaign "${variables.campaign.name}" has been launched
           </p>
         </div>
-        <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9998;"></div>
+        <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9998;" onclick="this.parentElement.remove()"></div>
       `;
       document.body.appendChild(successMessage);
       
       setTimeout(() => {
-        document.body.removeChild(successMessage);
+        if (document.body.contains(successMessage)) {
+          document.body.removeChild(successMessage);
+        }
         setSelectedCampaign(null);
-      }, 3000);
+      }, 4000);
     },
     onError: (error) => {
       console.error('Campaign launch failed:', error);
