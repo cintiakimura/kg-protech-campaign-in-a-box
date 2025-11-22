@@ -207,14 +207,14 @@ export default function Campaigns() {
                   </div>
                 )}
 
-                {campaign.status === 'draft' && (
+                {(campaign.status === 'draft' || campaign.status === 'active') && (
                   <Button
                     onClick={() => handleLaunchClick(campaign)}
                     disabled={leads.length === 0}
                     className="w-full bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium"
                   >
                     <Rocket className="w-4 h-4 mr-2" />
-                    {leads.length === 0 ? 'No Leads Available' : 'Select Recipients & Launch'}
+                    {leads.length === 0 ? 'No Leads Available' : campaign.status === 'draft' ? 'Select Recipients & Launch' : 'Send to More Recipients'}
                   </Button>
                 )}
               </div>
