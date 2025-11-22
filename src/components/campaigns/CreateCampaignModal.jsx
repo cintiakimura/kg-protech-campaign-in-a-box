@@ -31,32 +31,33 @@ export default function CreateCampaignModal({ isOpen, onClose, onSuccess }) {
     
     setIsGeneratingCopy(true);
     try {
-      const prompt = `Create a cold email for KG PROTECH, an IoT automotive training solution provider targeting decision makers at B2B multinational enterprises.
+      const prompt = `Create a cold email for KG PROTECH. Product: Automatic Fault Simulator for vehicles via internet, enabling remote diagnostic training with 60% cost savings and reduced setup time.
 
-Campaign Name: ${formData.name}
-Target Audience: ${formData.target_audience}
-Language: ${formData.language}
+      Campaign Name: ${formData.name}
+      Target Audience: ${formData.target_audience}
+      Language: ${formData.language}
 
-CRITICAL REQUIREMENTS:
-- EXTREMELY concise (2-3 short paragraphs maximum - executives receive tons of emails)
-- Get to the point in first sentence
-- Highlight: 15-minute webinar (not a sales pitch)
-- Emphasize concrete benefits: Save days in setup time and up to 60% of training costs
-- One clear call-to-action: schedule the 15-min webinar
-- Professional, respectful tone
+      MANDATORY RULES (NEVER SKIP):
+      1. EXTREMELY concise (2-3 short paragraphs maximum)
+      2. Get straight to the point in first sentence
+      3. Ask for a 15-minute webinar (not a sales pitch)
+      4. Emphasize: 60% cost savings and reduced setup time
+      5. Include this EXACT call-to-action at the end of email body (before signature):
+      "📅 Schedule your 15-minute webinar: https://calendar.google.com/calendar/appointments/schedules/AcZssZ0H5P8VL5P_7YDKGZmLJZBQGgKpB5mTl8jC8yz8dXQr0YJZQ0?gv=true"
+      6. Professional, direct tone
 
-End with this exact signature:
-Best regards,
-Cintia Kimura
-Founder and COO
-cintia@kgprotech.com
-Tel: +33 07 68 62 07 04
+      End with this exact signature:
+      Best regards,
+      Cintia Kimura
+      Founder and COO
+      cintia@kgprotech.com
+      Tel: +33 07 68 62 07 04
 
-Return the result in the following JSON format:
-{
-  "subject": "email subject line here",
-  "body": "email body content here with proper formatting"
-}`;
+      Return the result in the following JSON format:
+      {
+      "subject": "email subject line here",
+      "body": "email body content here with proper formatting"
+      }`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: prompt,
@@ -69,13 +70,10 @@ Return the result in the following JSON format:
         }
       });
 
-      const scheduleLink = `${window.location.origin}/ScheduleWebinar`;
-      const emailBodyWithLink = `${result.body}\n\n📅 Schedule your 15-minute webinar here: ${scheduleLink}`;
-
       setFormData(prev => ({
         ...prev,
         email_subject: result.subject,
-        email_body: emailBodyWithLink
+        email_body: result.body
       }));
     } catch (error) {
       alert('Failed to generate copy. Please try again.');
