@@ -48,17 +48,19 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
     
     setIsGeneratingCopy(true);
     try {
-      const prompt = `Create a cold email for KG PROTECH, an IoT automotive training solution provider.
+      const prompt = `Create a cold email for KG PROTECH, an IoT automotive training solution provider targeting decision makers at B2B multinational enterprises.
 
 Campaign Name: ${formData.name}
 Target Audience: ${formData.target_audience}
 Language: ${formData.language}
 
-The email should be:
-- Concise and direct (3-4 short paragraphs maximum)
-- Clear intention: schedule a webinar to demonstrate IoT automotive training solutions
-- Professional but personal tone
-- Include a clear call-to-action to schedule a webinar meeting
+CRITICAL REQUIREMENTS:
+- EXTREMELY concise (2-3 short paragraphs maximum - executives receive tons of emails)
+- Get to the point in first sentence
+- Highlight: 15-minute webinar (not a sales pitch)
+- Emphasize concrete benefits: Save days in setup time and up to 60% of training costs
+- One clear call-to-action: schedule the 15-min webinar
+- Professional, respectful tone
 
 End with this exact signature:
 Best regards,
