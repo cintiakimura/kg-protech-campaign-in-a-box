@@ -29,13 +29,13 @@ export default function Campaigns() {
     mutationFn: async ({ campaign, selectedLeads }) => {
       const scheduleLink = `${window.location.origin}/ScheduleWebinar`;
       
-      // Send emails to selected leads
-      const emailPromises = selectedLeads.map(lead => 
+      // Send emails to all recipients (both leads and manual emails)
+      const emailPromises = selectedLeads.map(recipient => 
         base44.entities.EmailMessage.create({
           subject: campaign.email_subject,
           body: `${campaign.email_body}\n\n📅 Schedule your 15-minute webinar here: ${scheduleLink}`,
           from_email: 'campaigns@kgprotech.com',
-          to_email: lead.email,
+          to_email: recipient.email,
           folder: 'sent',
           is_read: true,
           date: new Date().toISOString()
@@ -44,10 +44,10 @@ export default function Campaigns() {
       
       await Promise.all(emailPromises);
 
-      // Send actual emails via integration
-      for (const lead of selectedLeads) {
+      // Send actual emails via integration to all recipients
+      for (const recipient of selectedLeads) {
         await base44.integrations.Core.SendEmail({
-          to: lead.email,
+          to: recipient.email,
           subject: campaign.email_subject,
           body: `${campaign.email_body}\n\n📅 Schedule your 15-minute webinar here: ${scheduleLink}`
         });

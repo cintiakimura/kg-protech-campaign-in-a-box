@@ -2,14 +2,16 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Building2, Sparkles, CheckCircle2, Circle, Plus } from 'lucide-react';
+import { Building2, Sparkles, CheckCircle2, Circle, Plus, UserPlus } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import CreateClientModal from '../components/clients/CreateClientModal';
+import CreateLeadModal from '../components/leads/CreateLeadModal';
 
 export default function Clients() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCreateLeadModalOpen, setIsCreateLeadModalOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: clients = [], isLoading } = useQuery({
@@ -93,6 +95,13 @@ export default function Clients() {
           <p className="text-gray-400">Manage client profiles and track sales progress</p>
         </div>
         <div className="flex gap-3">
+          <Button
+            onClick={() => setIsCreateLeadModalOpen(true)}
+            className="bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium"
+          >
+            <UserPlus className="w-5 h-5 mr-2" />
+            Add Lead
+          </Button>
           <Button
             onClick={() => setIsCreateModalOpen(true)}
             className="bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium"
@@ -191,6 +200,12 @@ export default function Clients() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSuccess={() => queryClient.invalidateQueries(['clients'])}
+      />
+
+      <CreateLeadModal
+        isOpen={isCreateLeadModalOpen}
+        onClose={() => setIsCreateLeadModalOpen(false)}
+        onSuccess={() => queryClient.invalidateQueries(['leads'])}
       />
     </div>
   );
