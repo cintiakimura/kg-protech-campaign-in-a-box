@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Building2, Sparkles, CheckCircle2, Circle } from 'lucide-react';
+import { Building2, Sparkles, CheckCircle2, Circle, Plus } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import CreateClientModal from '../components/clients/CreateClientModal';
 
 export default function Clients() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -91,14 +92,23 @@ export default function Clients() {
           <h1 className="text-3xl font-bold text-white mb-2">Clients</h1>
           <p className="text-gray-400">Manage client profiles and track sales progress</p>
         </div>
-        <Button
-          onClick={() => organizeLeadsMutation.mutate()}
-          disabled={organizeLeadsMutation.isPending}
-          className="bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium"
-        >
-          <Sparkles className="w-5 h-5 mr-2" />
-          Organize Leads
-        </Button>
+        <div className="flex gap-3">
+          <Button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Add Client
+          </Button>
+          <Button
+            onClick={() => organizeLeadsMutation.mutate()}
+            disabled={organizeLeadsMutation.isPending}
+            className="bg-[#333333] hover:bg-[#444444] text-white"
+          >
+            <Sparkles className="w-5 h-5 mr-2" />
+            Organize Leads
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
