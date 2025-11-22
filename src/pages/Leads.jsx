@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Upload, Search, Mail, Calendar as CalendarIcon } from 'lucide-react';
 import ImportLeadsModal from '../components/leads/ImportLeadsModal';
+import CreateLeadModal from '../components/leads/CreateLeadModal';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -17,6 +18,7 @@ import {
 
 export default function Leads() {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const queryClient = useQueryClient();
 
@@ -47,6 +49,13 @@ export default function Leads() {
           <p className="text-gray-400">Manage and track your leads</p>
         </div>
         <div className="flex gap-3">
+          <Button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Add Lead
+          </Button>
           <Button
             onClick={() => setIsImportModalOpen(true)}
             className="bg-[#333333] hover:bg-[#444444] text-white"
@@ -132,6 +141,12 @@ export default function Leads() {
       <ImportLeadsModal
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
+        onSuccess={() => queryClient.invalidateQueries(['leads'])}
+      />
+
+      <CreateLeadModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
         onSuccess={() => queryClient.invalidateQueries(['leads'])}
       />
     </div>

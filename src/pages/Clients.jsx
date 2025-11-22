@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 
 export default function Clients() {
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: clients = [], isLoading } = useQuery({
@@ -175,6 +176,12 @@ export default function Clients() {
           })}
         </div>
       )}
+
+      <CreateClientModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={() => queryClient.invalidateQueries(['clients'])}
+      />
     </div>
   );
 }
