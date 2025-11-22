@@ -257,7 +257,7 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
                 </>
               )}
             </Button>
-            <div>
+            <label htmlFor="edit-image-upload">
               <input
                 type="file"
                 accept="image/*"
@@ -266,18 +266,17 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
                 id="edit-image-upload"
                 disabled={isGeneratingImage}
               />
-              <label htmlFor="edit-image-upload">
-                <Button
-                  as="span"
-                  disabled={isGeneratingImage}
-                  className="bg-[#333333] hover:bg-[#444444] text-white cursor-pointer"
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  Upload Image
-                </Button>
-              </label>
-            </div>
-            <div>
+              <Button
+                type="button"
+                disabled={isGeneratingImage}
+                className="bg-[#333333] hover:bg-[#444444] text-white cursor-pointer"
+                onClick={() => document.getElementById('edit-image-upload').click()}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Upload Image
+              </Button>
+            </label>
+            <label htmlFor="edit-presentation-upload">
               <input
                 type="file"
                 accept=".pdf,.ppt,.pptx"
@@ -286,17 +285,16 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
                 id="edit-presentation-upload"
                 disabled={isGeneratingImage}
               />
-              <label htmlFor="edit-presentation-upload">
-                <Button
-                  as="span"
-                  disabled={isGeneratingImage}
-                  className="bg-[#333333] hover:bg-[#444444] text-white cursor-pointer"
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  Upload Presentation
-                </Button>
-              </label>
-            </div>
+              <Button
+                type="button"
+                disabled={isGeneratingImage}
+                className="bg-[#333333] hover:bg-[#444444] text-white cursor-pointer"
+                onClick={() => document.getElementById('edit-presentation-upload').click()}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Upload Presentation
+              </Button>
+            </label>
           </div>
 
           <div>
