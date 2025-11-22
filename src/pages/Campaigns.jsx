@@ -242,6 +242,7 @@ export default function Campaigns() {
         leads={leads}
         onConfirm={handleConfirmLaunch}
         isLaunching={launchCampaignMutation.isPending}
+        onLeadCreated={() => queryClient.invalidateQueries(['leads'])}
       />
     </div>
   );
