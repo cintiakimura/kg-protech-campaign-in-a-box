@@ -34,47 +34,37 @@ export default function Campaigns() {
       const scheduleLink = `${window.location.origin}/ScheduleWebinar`;
       let successCount = 0;
       const errors = [];
-      
-      // A/B Testing: Distribute recipients across variants
-      let recipientVariantMap = [];
+
+      // A/B Test variant assignment
+      let variantAssignments = {};
       if (campaign.ab_test_enabled && campaign.ab_test_variants?.length > 0) {
         const variants = campaign.ab_test_variants;
-        let assignedIndex = 0;
+        let assignmentIndex = 0;
         
-        // Create weighted distribution based on traffic percentages
-        selectedLeads.forEach((recipient) => {
-          const randomValue = Math.random() * 100;
+        selectedLeads.forEach((lead, idx) => {
+          // Distribute leads across variants based on traffic percentage
           let cumulativePercentage = 0;
-          let assignedVariant = variants[0];
+          const randomValue = (idx / selectedLeads.length) * 100;
           
           for (const variant of variants) {
             cumulativePercentage += variant.traffic_percentage || 0;
-            if (randomValue <= cumulativePercentage) {
-              assignedVariant = variant;
+            if (randomValue < cumulativePercentage) {
+              variantAssignments[lead.email] = variant;
               break;
             }
           }
-          
-          recipientVariantMap.push({
-            recipient,
-            variant: assignedVariant
-          });
         });
-      } else {
-        // No A/B testing, use default campaign content
-        recipientVariantMap = selectedLeads.map(recipient => ({
-          recipient,
-          variant: null
-        }));
       }
       
       // Send emails sequentially to avoid rate limiting and ensure delivery
-      for (const { recipient, variant } of recipientVariantMap) {
+      for (const recipient of selectedLeads) {
         try {
-          console.log('Sending email to:', recipient.email, 'with variant:', variant?.name || 'default');
+          console.log('Sending email to:', recipient.email);
           
-          let emailSubject = variant ? variant.email_subject : (campaign.email_subject || 'Campaign Email');
-          let emailBody = variant ? variant.email_body : (campaign.email_body || '');
+          // Get variant for A/B testing
+          const assignedVariant = variantAssignments[recipient.email];
+          let emailSubject = assignedVariant?.email_subject || campaign.email_subject || 'Campaign Email';
+          let emailBody = assignedVariant?.email_body || campaign.email_body || '';
 
           // AI Personalization
           if (useAIPersonalization && recipient.full_name) {
@@ -151,27 +141,20 @@ Return JSON with:
             date: new Date().toISOString()
           });
 
-          // Update lead with campaign and variant reference
+          // Update lead with campaign reference and variant
           if (recipient.id) {
             await base44.entities.Lead.update(recipient.id, {
               campaign_id: campaign.id,
-              ab_test_variant_id: variant?.variant_id || null,
-              email_opened: false,
-              email_clicked: false,
-              email_converted: false
+              ab_test_variant: assignedVariant?.variant_id || null
             });
           }
 
-          // Update variant stats
-          if (variant) {
-            const updatedVariants = campaign.ab_test_variants.map(v => 
-              v.variant_id === variant.variant_id 
-                ? { ...v, sent_count: (v.sent_count || 0) + 1 }
-                : v
-            );
-            await base44.entities.Campaign.update(campaign.id, {
-              ab_test_variants: updatedVariants
-            });
+          // Track variant performance
+          if (assignedVariant) {
+            const variantIndex = campaign.ab_test_variants.findIndex(v => v.variant_id === assignedVariant.variant_id);
+            if (variantIndex !== -1) {
+              campaign.ab_test_variants[variantIndex].sent_count = (campaign.ab_test_variants[variantIndex].sent_count || 0) + 1;
+            }
           }
 
           successCount++;
@@ -183,11 +166,17 @@ Return JSON with:
       
       console.log('Campaign launch complete:', { successCount, totalCount: selectedLeads.length, errors });
       
-      // Update campaign with successful sends
-      await base44.entities.Campaign.update(campaign.id, {
+      // Update campaign with successful sends and variant data
+      const updateData = {
         status: 'active',
         sent_count: (campaign.sent_count || 0) + successCount
-      });
+      };
+      
+      if (campaign.ab_test_enabled && campaign.ab_test_variants) {
+        updateData.ab_test_variants = campaign.ab_test_variants;
+      }
+      
+      await base44.entities.Campaign.update(campaign.id, updateData);
 
       if (successCount === 0 && errors.length > 0) {
         throw new Error(`All emails failed: ${errors[0].error}`);
