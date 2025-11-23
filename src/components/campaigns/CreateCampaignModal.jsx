@@ -22,7 +22,7 @@ export default function CreateCampaignModal({ isOpen, onClose, onSuccess }) {
   });
   const [videoUrl, setVideoUrl] = useState('');
   const [isGeneratingCopy, setIsGeneratingCopy] = useState(false);
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const { data: campaigns = [] } = useQuery({
     queryKey: ['campaigns'],
@@ -94,7 +94,7 @@ export default function CreateCampaignModal({ isOpen, onClose, onSuccess }) {
     const file = e.target.files[0];
     if (!file) return;
     
-    setIsGeneratingImage(true);
+    setIsUploading(true);
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setFormData(prev => ({
@@ -105,7 +105,7 @@ export default function CreateCampaignModal({ isOpen, onClose, onSuccess }) {
     } catch (error) {
       alert('Failed to upload file. Please try again.');
     } finally {
-      setIsGeneratingImage(false);
+      setIsUploading(false);
     }
   };
 
@@ -213,16 +213,16 @@ export default function CreateCampaignModal({ isOpen, onClose, onSuccess }) {
                 onChange={(e) => handleMediaUpload(e, 'image')}
                 className="hidden"
                 id="image-upload"
-                disabled={isGeneratingImage}
+                disabled={isUploading}
               />
               <label htmlFor="image-upload">
                 <Button
                   as="span"
-                  disabled={isGeneratingImage}
+                  disabled={isUploading}
                   className="bg-[#333333] hover:bg-[#444444] text-white cursor-pointer"
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  Upload Image
+                  {isUploading ? 'Uploading...' : 'Upload Image'}
                 </Button>
               </label>
             </div>
@@ -233,16 +233,16 @@ export default function CreateCampaignModal({ isOpen, onClose, onSuccess }) {
                 onChange={(e) => handleMediaUpload(e, 'presentation')}
                 className="hidden"
                 id="presentation-upload"
-                disabled={isGeneratingImage}
+                disabled={isUploading}
               />
               <label htmlFor="presentation-upload">
                 <Button
                   as="span"
-                  disabled={isGeneratingImage}
+                  disabled={isUploading}
                   className="bg-[#333333] hover:bg-[#444444] text-white cursor-pointer"
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  Upload Presentation
+                  {isUploading ? 'Uploading...' : 'Upload Presentation'}
                 </Button>
               </label>
             </div>

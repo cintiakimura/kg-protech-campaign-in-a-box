@@ -23,6 +23,7 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
   });
   const [videoUrl, setVideoUrl] = useState('');
   const [isCreateLeadModalOpen, setIsCreateLeadModalOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: campaigns = [] } = useQuery({
@@ -48,7 +49,6 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
     }
   }, [campaign]);
   const [isGeneratingCopy, setIsGeneratingCopy] = useState(false);
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
   if (!isOpen || !campaign) return null;
 
@@ -115,7 +115,7 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
     const file = e.target.files[0];
     if (!file) return;
     
-    setIsGeneratingImage(true);
+    setIsUploading(true);
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setFormData(prev => ({
@@ -126,7 +126,7 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
     } catch (error) {
       alert('Failed to upload file. Please try again.');
     } finally {
-      setIsGeneratingImage(false);
+      setIsUploading(false);
     }
   };
 
@@ -236,16 +236,16 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
                 onChange={(e) => handleMediaUpload(e, 'image')}
                 className="hidden"
                 id="edit-image-upload"
-                disabled={isGeneratingImage}
+                disabled={isUploading}
               />
               <Button
                 type="button"
-                disabled={isGeneratingImage}
+                disabled={isUploading}
                 className="bg-[#333333] hover:bg-[#444444] text-white cursor-pointer"
                 onClick={() => document.getElementById('edit-image-upload').click()}
               >
                 <Upload className="w-4 h-4 mr-2" />
-                Upload Image
+                {isUploading ? 'Uploading...' : 'Upload Image'}
               </Button>
             </label>
             <label htmlFor="edit-presentation-upload">
@@ -255,16 +255,16 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
                 onChange={(e) => handleMediaUpload(e, 'presentation')}
                 className="hidden"
                 id="edit-presentation-upload"
-                disabled={isGeneratingImage}
+                disabled={isUploading}
               />
               <Button
                 type="button"
-                disabled={isGeneratingImage}
+                disabled={isUploading}
                 className="bg-[#333333] hover:bg-[#444444] text-white cursor-pointer"
                 onClick={() => document.getElementById('edit-presentation-upload').click()}
               >
                 <Upload className="w-4 h-4 mr-2" />
-                Upload Presentation
+                {isUploading ? 'Uploading...' : 'Upload Presentation'}
               </Button>
             </label>
           </div>
