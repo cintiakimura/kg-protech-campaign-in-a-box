@@ -2,8 +2,12 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 
 async function getAccessToken() {
   const clientId = Deno.env.get('GOOGLE_CLIENT_ID');
-  const clientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET');
+  const clientSecret = Deno.env.get('google_oauth_client_secret');
   const refreshToken = Deno.env.get('GOOGLE_REFRESH_TOKEN');
+
+  if (!clientId || !clientSecret || !refreshToken) {
+    throw new Error('Missing Google OAuth credentials. Please configure GOOGLE_CLIENT_ID, google_oauth_client_secret, and GOOGLE_REFRESH_TOKEN in environment variables.');
+  }
 
   const response = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
@@ -17,6 +21,11 @@ async function getAccessToken() {
   });
 
   const data = await response.json();
+  
+  if (!data.access_token) {
+    throw new Error(`Failed to get access token: ${data.error_description || data.error || 'Unknown error'}`);
+  }
+  
   return data.access_token;
 }
 
@@ -137,6 +146,10 @@ Deno.serve(async (req) => {
 
     return Response.json({ error: 'Invalid action' }, { status: 400 });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('Gmail sync error:', error);
+    return Response.json({ 
+      error: error.message || 'Unknown error',
+      details: error.stack
+    }, { status: 500 });
   }
 });
