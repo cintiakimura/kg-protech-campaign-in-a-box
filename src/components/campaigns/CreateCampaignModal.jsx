@@ -9,6 +9,7 @@ import { base44 } from '@/api/base44Client';
 import FollowupSequenceEditor from './FollowupSequenceEditor';
 import AIMediaSuggestion from './AIMediaSuggestion';
 import AIABTestSuggestion from './AIABTestSuggestion';
+import AIEmailGenerator from './AIEmailGenerator';
 import { useQuery } from '@tanstack/react-query';
 
 export default function CreateCampaignModal({ isOpen, onClose, onSuccess }) {
@@ -247,6 +248,16 @@ export default function CreateCampaignModal({ isOpen, onClose, onSuccess }) {
             onVariantApplied={handleABTestVariantApplied}
           />
 
+          <AIEmailGenerator
+            currentContent={formData.email_body}
+            currentSubject={formData.email_subject}
+            targetAudience={formData.target_audience}
+            language={formData.language}
+            campaigns={campaigns}
+            onApplyBody={(body) => setFormData(prev => ({ ...prev, email_body: body }))}
+            onApplySubject={(subject) => setFormData(prev => ({ ...prev, email_subject: subject }))}
+          />
+
           <div className="flex gap-3 flex-wrap">
             <Button
               onClick={handleGenerateCopy}
@@ -404,6 +415,8 @@ export default function CreateCampaignModal({ isOpen, onClose, onSuccess }) {
             <FollowupSequenceEditor
               sequences={formData.followup_sequences}
               onChange={(sequences) => setFormData(prev => ({ ...prev, followup_sequences: sequences }))}
+              targetAudience={formData.target_audience}
+              language={formData.language}
             />
           </div>
 

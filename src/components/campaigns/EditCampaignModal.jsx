@@ -10,6 +10,7 @@ import CreateLeadModal from '../leads/CreateLeadModal';
 import FollowupSequenceEditor from './FollowupSequenceEditor';
 import AIMediaSuggestion from './AIMediaSuggestion';
 import AIABTestSuggestion from './AIABTestSuggestion';
+import AIEmailGenerator from './AIEmailGenerator';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 
 export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess, onLaunchClick }) {
@@ -270,6 +271,16 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
             onVariantApplied={handleABTestVariantApplied}
           />
 
+          <AIEmailGenerator
+            currentContent={formData.email_body}
+            currentSubject={formData.email_subject}
+            targetAudience={formData.target_audience}
+            language={formData.language}
+            campaigns={campaigns}
+            onApplyBody={(body) => setFormData(prev => ({ ...prev, email_body: body }))}
+            onApplySubject={(subject) => setFormData(prev => ({ ...prev, email_subject: subject }))}
+          />
+
           <div className="flex gap-3 flex-wrap">
             <Button
               onClick={handleGenerateCopy}
@@ -425,6 +436,8 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
             <FollowupSequenceEditor
               sequences={formData.followup_sequences}
               onChange={(sequences) => setFormData(prev => ({ ...prev, followup_sequences: sequences }))}
+              targetAudience={formData.target_audience}
+              language={formData.language}
             />
           </div>
 

@@ -5,10 +5,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2, Clock, Mail, Calendar } from 'lucide-react';
+import { Plus, Trash2, Clock, Mail, Calendar, Sparkles } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 
-export default function FollowupSequenceEditor({ sequences = [], onChange }) {
+export default function FollowupSequenceEditor({ sequences = [], onChange, targetAudience = '', language = 'English' }) {
   const [editingSequences, setEditingSequences] = useState(sequences);
+  const [generatingIndex, setGeneratingIndex] = useState(null);
 
   const addSequence = () => {
     const newSequence = {
@@ -34,6 +36,64 @@ export default function FollowupSequenceEditor({ sequences = [], onChange }) {
     const updated = editingSequences.filter((_, i) => i !== index);
     setEditingSequences(updated);
     onChange(updated);
+  };
+
+  const generateFollowupContent = async (index, sequence) => {
+    setGeneratingIndex(index);
+    try {
+      const statusContext = {
+        new: 'lead just signed up',
+        contacted: 'initial contact made',
+        interested: 'lead showed interest',
+        scheduled: 'meeting scheduled'
+      }[sequence.trigger_status] || 'status changed';
+
+      const prompt = `Generate follow-up email for KG PROTECH's IoT automotive training product.
+
+Context: This email is sent ${sequence.delay_days} days after ${statusContext}.
+Target Audience: ${targetAudience || 'automotive professionals'}
+Language: ${language}
+Product: Automatic Fault Simulator for vehicles via internet, enabling remote diagnostic training with 60% cost savings and reduced setup time.
+
+Requirements:
+1. Professional and concise (2-3 paragraphs)
+2. Reference previous interaction contextually
+3. Focus on next steps and value
+4. Include webinar scheduling link
+5. End with signature
+
+Generate both subject and body.
+
+Return JSON:
+{
+  "subject": "compelling subject line",
+  "body": "email body with proper formatting"
+}`;
+
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: prompt,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            subject: { type: "string" },
+            body: { type: "string" }
+          }
+        }
+      });
+
+      const updated = [...editingSequences];
+      updated[index] = {
+        ...updated[index],
+        email_subject: result.subject,
+        email_body: result.body
+      };
+      setEditingSequences(updated);
+      onChange(updated);
+    } catch (error) {
+      alert('Failed to generate follow-up content. Please try again.');
+    } finally {
+      setGeneratingIndex(null);
+    }
   };
 
   return (
@@ -66,15 +126,27 @@ export default function FollowupSequenceEditor({ sequences = [], onChange }) {
                   <Clock className="w-4 h-4 text-[#00c600]" />
                   <span className="text-white font-medium text-sm">Sequence {index + 1}</span>
                 </div>
-                <Button
-                  type="button"
-                  onClick={() => removeSequence(index)}
-                  size="sm"
-                  variant="ghost"
-                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    onClick={() => generateFollowupContent(index, sequence)}
+                    disabled={generatingIndex === index}
+                    size="sm"
+                    className="bg-[#00c600] hover:bg-[#00dd00] text-[#212121] h-7 text-xs"
+                  >
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    {generatingIndex === index ? 'Generating...' : 'AI Generate'}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => removeSequence(index)}
+                    size="sm"
+                    variant="ghost"
+                    className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
