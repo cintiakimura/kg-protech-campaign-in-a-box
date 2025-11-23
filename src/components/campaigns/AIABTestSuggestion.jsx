@@ -119,12 +119,13 @@ Return JSON with 3 A/B test suggestions:
   };
 
   const applySubjectVariant = (variant) => {
-    if (suggestions?.subject_line_test) {
+    if (suggestions?.subject_line_test && onVariantApplied) {
       const subject = variant === 'A' ? suggestions.subject_line_test.variant_a : suggestions.subject_line_test.variant_b;
       onVariantApplied({ 
         email_subject: subject,
         ab_test_variant: variant
       });
+      setSuggestions(null);
     }
   };
 
