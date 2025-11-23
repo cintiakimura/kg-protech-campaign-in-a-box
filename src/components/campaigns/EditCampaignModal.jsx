@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { base44 } from '@/api/base44Client';
 import CreateLeadModal from '../leads/CreateLeadModal';
 import FollowupSequenceEditor from './FollowupSequenceEditor';
-import AIMediaSuggestion from './AIMediaSuggestion';
 import AIABTestSuggestion from './AIABTestSuggestion';
 import AIEmailGenerator from './AIEmailGenerator';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
@@ -54,16 +53,6 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
   if (!isOpen || !campaign) return null;
-
-  const handleAISuggestionApplied = (suggestion) => {
-    if (suggestion.media_type && suggestion.media_url) {
-      setFormData(prev => ({
-        ...prev,
-        media_type: suggestion.media_type,
-        media_url: suggestion.media_url
-      }));
-    }
-  };
 
   const handleABTestVariantApplied = (variant) => {
     setFormData(prev => ({
@@ -258,14 +247,9 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
                 className="bg-[#333333] border-[#444444] text-white"
               />
             </div>
-          </div>
+            </div>
 
-          <AIMediaSuggestion 
-            campaigns={campaigns} 
-            onSuggestionApplied={handleAISuggestionApplied}
-          />
-
-          <AIABTestSuggestion
+            <AIABTestSuggestion
             campaigns={campaigns}
             currentCampaign={formData}
             onVariantApplied={handleABTestVariantApplied}

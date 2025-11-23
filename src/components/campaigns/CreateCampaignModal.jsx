@@ -7,7 +7,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { base44 } from '@/api/base44Client';
 import FollowupSequenceEditor from './FollowupSequenceEditor';
-import AIMediaSuggestion from './AIMediaSuggestion';
 import AIABTestSuggestion from './AIABTestSuggestion';
 import AIEmailGenerator from './AIEmailGenerator';
 import { useQuery } from '@tanstack/react-query';
@@ -33,16 +32,6 @@ export default function CreateCampaignModal({ isOpen, onClose, onSuccess }) {
   });
 
   if (!isOpen) return null;
-
-  const handleAISuggestionApplied = (suggestion) => {
-    if (suggestion.media_type && suggestion.media_url) {
-      setFormData(prev => ({
-        ...prev,
-        media_type: suggestion.media_type,
-        media_url: suggestion.media_url
-      }));
-    }
-  };
 
   const handleABTestVariantApplied = (variant) => {
     setFormData(prev => ({
@@ -235,14 +224,9 @@ export default function CreateCampaignModal({ isOpen, onClose, onSuccess }) {
                 className="bg-[#333333] border-[#444444] text-white"
               />
             </div>
-          </div>
+            </div>
 
-          <AIMediaSuggestion 
-            campaigns={campaigns} 
-            onSuggestionApplied={handleAISuggestionApplied}
-          />
-
-          <AIABTestSuggestion
+            <AIABTestSuggestion
             campaigns={campaigns}
             currentCampaign={formData}
             onVariantApplied={handleABTestVariantApplied}
