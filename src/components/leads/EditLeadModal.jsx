@@ -148,6 +148,16 @@ export default function EditLeadModal({ isOpen, onClose, lead, onSuccess }) {
             />
           </div>
 
+          <div className="border-t border-[#333333] pt-4">
+            <AIScheduler 
+              lead={formData}
+              onScheduled={() => {
+                onSuccess();
+                onClose();
+              }}
+            />
+          </div>
+
           <div className="flex gap-3 pt-4 border-t border-[#333333]">
             <Button
               type="submit"
