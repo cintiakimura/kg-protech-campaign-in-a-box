@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { base44 } from '@/api/base44Client';
+import AIScheduler from '../meetings/AIScheduler';
 
 export default function EditLeadModal({ isOpen, onClose, lead, onSuccess }) {
   const [formData, setFormData] = useState({

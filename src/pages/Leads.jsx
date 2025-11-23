@@ -90,6 +90,48 @@ export default function Leads() {
                   followup_history: updatedHistory
                 });
 
+                // If auto-schedule meeting is enabled, trigger AI scheduler
+                if (sequence.schedule_meeting) {
+                  try {
+                    const schedulingPrompt = `Find optimal meeting time for lead ${lead.full_name} (${lead.language_preference || 'English'}, ${lead.company || 'company'}) in next 7 days. Consider European business hours. Return ISO datetime, day name, and time display.`;
+                    
+                    const timeResult = await base44.integrations.Core.InvokeLLM({
+                      prompt: schedulingPrompt,
+                      response_json_schema: {
+                        type: "object",
+                        properties: {
+                          datetime: { type: "string" },
+                          day_name: { type: "string" },
+                          time_display: { type: "string" }
+                        }
+                      }
+                    });
+
+                    await base44.entities.Webinar.create({
+                      title: `Follow-up Meeting with ${lead.full_name}`,
+                      description: `Auto-scheduled follow-up meeting`,
+                      start_time: timeResult.datetime,
+                      end_time: new Date(new Date(timeResult.datetime).getTime() + 15 * 60000).toISOString(),
+                      host_name: 'Cintia Kimura',
+                      meeting_link: 'https://meet.google.com/xyz',
+                      attendees: [{
+                        name: lead.full_name,
+                        email: lead.email,
+                        registered_at: new Date().toISOString()
+                      }]
+                    });
+
+                    await base44.entities.Lead.update(lead.id, {
+                      status: 'scheduled',
+                      next_followup_date: timeResult.datetime
+                    });
+
+                    console.log('Auto-scheduled meeting for', lead.email, 'at', timeResult.time_display);
+                  } catch (scheduleError) {
+                    console.warn('Auto-scheduling failed for', lead.email, scheduleError);
+                  }
+                }
+
                 sentCount++;
               } catch (error) {
                 errors.push({ lead: lead.full_name, error: error.message });

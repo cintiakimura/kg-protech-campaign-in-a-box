@@ -4,7 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, Clock, Mail } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Plus, Trash2, Clock, Mail, Calendar } from 'lucide-react';
 
 export default function FollowupSequenceEditor({ sequences = [], onChange }) {
   const [editingSequences, setEditingSequences] = useState(sequences);
@@ -14,7 +15,8 @@ export default function FollowupSequenceEditor({ sequences = [], onChange }) {
       trigger_status: 'contacted',
       delay_days: 2,
       email_subject: '',
-      email_body: ''
+      email_body: '',
+      schedule_meeting: false
     };
     const updated = [...editingSequences, newSequence];
     setEditingSequences(updated);
@@ -125,6 +127,25 @@ export default function FollowupSequenceEditor({ sequences = [], onChange }) {
                   rows={4}
                   className="bg-[#2a2a2a] border-[#444444] text-white"
                 />
+              </div>
+
+              <div className="flex items-center gap-3 p-3 bg-[#2a2a2a] rounded">
+                <Checkbox
+                  checked={sequence.schedule_meeting || false}
+                  onCheckedChange={(checked) => updateSequence(index, 'schedule_meeting', checked)}
+                  className="border-[#555555] data-[state=checked]:bg-[#00c600] data-[state=checked]:border-[#00c600]"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-[#00c600]" />
+                    <Label className="text-white text-sm cursor-pointer" onClick={() => updateSequence(index, 'schedule_meeting', !sequence.schedule_meeting)}>
+                      Auto-schedule meeting with AI
+                    </Label>
+                  </div>
+                  <p className="text-gray-400 text-xs mt-1">
+                    AI will find optimal meeting times and send calendar invites
+                  </p>
+                </div>
               </div>
             </div>
           ))}
