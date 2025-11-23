@@ -15,6 +15,7 @@ export default function Layout({ children, currentPageName }) {
   const tabs = [
     { id: 'Dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'Campaigns', label: 'Campaigns', icon: Megaphone },
+    { id: 'ABTestDashboard', label: 'A/B Tests', icon: BarChart3 },
     { id: 'Leads', label: 'Leads', icon: Users },
     { id: 'Clients', label: 'Clients', icon: Building2 },
     { id: 'Webmail', label: 'Webmail', icon: Mail },

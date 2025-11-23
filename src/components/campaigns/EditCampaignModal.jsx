@@ -11,7 +11,9 @@ import FollowupSequenceEditor from './FollowupSequenceEditor';
 import AIMediaSuggestion from './AIMediaSuggestion';
 import AIABTestSuggestion from './AIABTestSuggestion';
 import AIEmailGenerator from './AIEmailGenerator';
+import ABTestVariantManager from './ABTestVariantManager';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess, onLaunchClick }) {
   const [formData, setFormData] = useState({
@@ -22,7 +24,9 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
     email_body: '',
     media_type: '',
     media_url: '',
-    followup_sequences: []
+    followup_sequences: [],
+    ab_test_enabled: false,
+    ab_test_variants: []
   });
   const [videoUrl, setVideoUrl] = useState('');
   const [isCreateLeadModalOpen, setIsCreateLeadModalOpen] = useState(false);
@@ -43,7 +47,9 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
         email_body: campaign.email_body || '',
         media_type: campaign.media_type || '',
         media_url: campaign.media_url || campaign.generated_image_url || '',
-        followup_sequences: campaign.followup_sequences || []
+        followup_sequences: campaign.followup_sequences || [],
+        ab_test_enabled: campaign.ab_test_enabled || false,
+        ab_test_variants: campaign.ab_test_variants || []
       });
       if (campaign.media_type === 'video_url') {
         setVideoUrl(campaign.media_url || '');
@@ -198,6 +204,19 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
   };
 
   const handleSubmit = async () => {
+    // Validate A/B test configuration
+    if (formData.ab_test_enabled) {
+      if (formData.ab_test_variants.length < 2) {
+        alert('A/B testing requires at least 2 variants');
+        return;
+      }
+      const totalPercentage = formData.ab_test_variants.reduce((sum, v) => sum + (v.traffic_percentage || 0), 0);
+      if (totalPercentage !== 100) {
+        alert('Traffic allocation must equal 100%');
+        return;
+      }
+    }
+
     try {
       await base44.entities.Campaign.update(campaign.id, formData);
       onSuccess();
@@ -223,6 +242,20 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
         </div>
 
         <div className="p-6 space-y-6">
+          <Tabs defaultValue="basic" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 bg-[#333333]">
+              <TabsTrigger value="basic" className="data-[state=active]:bg-[#00c600] data-[state=active]:text-[#212121]">
+                Basic Info
+              </TabsTrigger>
+              <TabsTrigger value="abtest" className="data-[state=active]:bg-[#00c600] data-[state=active]:text-[#212121]">
+                A/B Testing
+              </TabsTrigger>
+              <TabsTrigger value="followup" className="data-[state=active]:bg-[#00c600] data-[state=active]:text-[#212121]">
+                Follow-ups
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="basic" className="space-y-6 mt-6">
           <div>
             <Label className="text-gray-300 mb-2">Campaign Name</Label>
             <Input
@@ -432,14 +465,50 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
             </div>
           )}
 
-          <div className="border-t border-[#333333] pt-6">
-            <FollowupSequenceEditor
-              sequences={formData.followup_sequences}
-              onChange={(sequences) => setFormData(prev => ({ ...prev, followup_sequences: sequences }))}
-              targetAudience={formData.target_audience}
-              language={formData.language}
-            />
-          </div>
+            </TabsContent>
+
+            <TabsContent value="abtest" className="space-y-6 mt-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <Label className="text-gray-300 text-base font-semibold">Enable A/B Testing</Label>
+                  <p className="text-gray-500 text-sm">Test multiple variants to optimize performance</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.ab_test_enabled}
+                    onChange={(e) => setFormData(prev => ({ ...prev, ab_test_enabled: e.target.checked }))}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-[#333333] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#00c600]"></div>
+                </label>
+              </div>
+
+              {formData.ab_test_enabled && (
+                <ABTestVariantManager
+                  variants={formData.ab_test_variants}
+                  onChange={(variants) => setFormData(prev => ({ ...prev, ab_test_variants: variants }))}
+                  language={formData.language}
+                  targetAudience={formData.target_audience}
+                />
+              )}
+
+              {!formData.ab_test_enabled && (
+                <div className="text-center py-12 bg-[#333333] rounded-lg border-2 border-dashed border-[#444444]">
+                  <p className="text-gray-400">Enable A/B testing to create multiple email variants and optimize your campaign performance</p>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="followup" className="space-y-6 mt-6">
+              <FollowupSequenceEditor
+                sequences={formData.followup_sequences}
+                onChange={(sequences) => setFormData(prev => ({ ...prev, followup_sequences: sequences }))}
+                targetAudience={formData.target_audience}
+                language={formData.language}
+              />
+            </TabsContent>
+          </Tabs>
 
           <div className="flex gap-3 pt-4 border-t border-[#333333]">
             <Button
