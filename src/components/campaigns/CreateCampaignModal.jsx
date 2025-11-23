@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { base44 } from '@/api/base44Client';
+import FollowupSequenceEditor from './FollowupSequenceEditor';
 
 export default function CreateCampaignModal({ isOpen, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
@@ -15,7 +16,8 @@ export default function CreateCampaignModal({ isOpen, onClose, onSuccess }) {
     email_subject: '',
     email_body: '',
     media_type: '',
-    media_url: ''
+    media_url: '',
+    followup_sequences: []
   });
   const [videoUrl, setVideoUrl] = useState('');
   const [isGeneratingCopy, setIsGeneratingCopy] = useState(false);
@@ -361,6 +363,13 @@ export default function CreateCampaignModal({ isOpen, onClose, onSuccess }) {
               )}
             </div>
           )}
+
+          <div className="border-t border-[#333333] pt-6">
+            <FollowupSequenceEditor
+              sequences={formData.followup_sequences}
+              onChange={(sequences) => setFormData(prev => ({ ...prev, followup_sequences: sequences }))}
+            />
+          </div>
 
           <div className="flex gap-3 pt-4 border-t border-[#333333]">
             <Button

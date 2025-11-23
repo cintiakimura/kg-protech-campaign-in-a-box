@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { base44 } from '@/api/base44Client';
 import CreateLeadModal from '../leads/CreateLeadModal';
+import FollowupSequenceEditor from './FollowupSequenceEditor';
 import { useQueryClient } from '@tanstack/react-query';
 
 export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess, onLaunchClick }) {
@@ -17,7 +18,8 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
     email_subject: '',
     email_body: '',
     media_type: '',
-    media_url: ''
+    media_url: '',
+    followup_sequences: []
   });
   const [videoUrl, setVideoUrl] = useState('');
   const [isCreateLeadModalOpen, setIsCreateLeadModalOpen] = useState(false);
@@ -32,7 +34,8 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
         email_subject: campaign.email_subject || '',
         email_body: campaign.email_body || '',
         media_type: campaign.media_type || '',
-        media_url: campaign.media_url || campaign.generated_image_url || ''
+        media_url: campaign.media_url || campaign.generated_image_url || '',
+        followup_sequences: campaign.followup_sequences || []
       });
       if (campaign.media_type === 'video_url') {
         setVideoUrl(campaign.media_url || '');
@@ -382,6 +385,13 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
               )}
             </div>
           )}
+
+          <div className="border-t border-[#333333] pt-6">
+            <FollowupSequenceEditor
+              sequences={formData.followup_sequences}
+              onChange={(sequences) => setFormData(prev => ({ ...prev, followup_sequences: sequences }))}
+            />
+          </div>
 
           <div className="flex gap-3 pt-4 border-t border-[#333333]">
             <Button
