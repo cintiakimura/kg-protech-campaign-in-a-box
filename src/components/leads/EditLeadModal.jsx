@@ -42,7 +42,14 @@ export default function EditLeadModal({ isOpen, onClose, lead, onSuccess }) {
 
     setIsSaving(true);
     try {
-      await base44.entities.Lead.update(lead.id, formData);
+      const updates = { ...formData };
+      
+      // Track status changes for follow-up automation
+      if (formData.status !== lead.status) {
+        updates.last_status_change = new Date().toISOString();
+      }
+      
+      await base44.entities.Lead.update(lead.id, updates);
       onSuccess();
       onClose();
     } catch (error) {

@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Upload, Search, Mail, Calendar as CalendarIcon, Edit } from 'lucide-react';
+import { Plus, Upload, Search, Mail, Calendar as CalendarIcon, Edit, Send, Bell } from 'lucide-react';
 import ImportLeadsModal from '../components/leads/ImportLeadsModal';
 import CreateLeadModal from '../components/leads/CreateLeadModal';
 import EditLeadModal from '../components/leads/EditLeadModal';
@@ -30,6 +30,139 @@ export default function Leads() {
     queryFn: () => base44.entities.Lead.list('-created_date')
   });
 
+  const { data: campaigns = [] } = useQuery({
+    queryKey: ['campaigns'],
+    queryFn: () => base44.entities.Campaign.list()
+  });
+
+  const sendFollowupsMutation = useMutation({
+    mutationFn: async () => {
+      const now = new Date();
+      let sentCount = 0;
+      const errors = [];
+
+      for (const lead of leads) {
+        if (!lead.last_status_change || !lead.campaign_id) continue;
+
+        const campaign = campaigns.find(c => c.id === lead.campaign_id);
+        if (!campaign || !campaign.followup_sequences) continue;
+
+        for (const sequence of campaign.followup_sequences) {
+          if (sequence.trigger_status !== lead.status) continue;
+
+          const statusChangeDate = new Date(lead.last_status_change);
+          const daysSinceChange = Math.floor((now - statusChangeDate) / (1000 * 60 * 60 * 24));
+
+          if (daysSinceChange >= sequence.delay_days) {
+            const alreadySent = lead.followup_history?.some(
+              h => h.status === lead.status && h.subject === sequence.email_subject
+            );
+
+            if (!alreadySent) {
+              try {
+                const personalizedBody = `Dear ${lead.full_name},\n\n${sequence.email_body}\n\nBest regards,\nCintia Kimura\nFounder and COO\ncintia@kgprotech.com\nTel: +33 07 68 62 07 04`;
+
+                await base44.integrations.Core.SendEmail({
+                  from_name: 'KG PROTECH',
+                  to: lead.email,
+                  subject: sequence.email_subject,
+                  body: personalizedBody.replace(/\n/g, '<br>')
+                });
+
+                await base44.entities.EmailMessage.create({
+                  subject: sequence.email_subject,
+                  body: personalizedBody,
+                  from_email: 'campaigns@kgprotech.com',
+                  to_email: lead.email,
+                  folder: 'sent',
+                  is_read: true,
+                  date: new Date().toISOString()
+                });
+
+                const updatedHistory = lead.followup_history || [];
+                updatedHistory.push({
+                  date: new Date().toISOString(),
+                  subject: sequence.email_subject,
+                  status: lead.status
+                });
+
+                await base44.entities.Lead.update(lead.id, {
+                  followup_history: updatedHistory
+                });
+
+                sentCount++;
+              } catch (error) {
+                errors.push({ lead: lead.full_name, error: error.message });
+              }
+            }
+          }
+        }
+      }
+
+      return { sentCount, errors };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries(['leads']);
+      queryClient.invalidateQueries(['emails']);
+
+      const successMessage = document.createElement('div');
+      successMessage.innerHTML = `
+        <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                    background: #2a2a2a; border: 2px solid #00c600; border-radius: 12px; 
+                    padding: 32px; z-index: 9999; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+                    text-align: center; min-width: 400px;">
+          <div style="font-size: 48px; margin-bottom: 16px;">✅</div>
+          <h2 style="color: white; font-size: 24px; font-weight: bold; margin-bottom: 12px;">
+            Follow-ups Sent Successfully!
+          </h2>
+          <p style="color: #00c600; font-size: 18px;">
+            ${data.sentCount} follow-up emails sent
+          </p>
+        </div>
+        <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9998;" onclick="this.parentElement.remove()"></div>
+      `;
+      document.body.appendChild(successMessage);
+
+      setTimeout(() => {
+        if (document.body.contains(successMessage)) {
+          document.body.removeChild(successMessage);
+        }
+      }, 3000);
+    }
+  });
+
+  const updateLeadStatusMutation = useMutation({
+    mutationFn: ({ leadId, status }) => 
+      base44.entities.Lead.update(leadId, { 
+        status, 
+        last_status_change: new Date().toISOString() 
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['leads']);
+    }
+  });
+
+  const pendingFollowupsCount = leads.filter(lead => {
+    if (!lead.last_status_change || !lead.campaign_id) return false;
+    
+    const campaign = campaigns.find(c => c.id === lead.campaign_id);
+    if (!campaign?.followup_sequences) return false;
+
+    const now = new Date();
+    const statusChangeDate = new Date(lead.last_status_change);
+    
+    return campaign.followup_sequences.some(seq => {
+      if (seq.trigger_status !== lead.status) return false;
+      
+      const daysSinceChange = Math.floor((now - statusChangeDate) / (1000 * 60 * 60 * 24));
+      const alreadySent = lead.followup_history?.some(
+        h => h.status === lead.status && h.subject === seq.email_subject
+      );
+      
+      return daysSinceChange >= seq.delay_days && !alreadySent;
+    });
+  }).length;
+
   const filteredLeads = leads.filter(lead => 
     lead.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     lead.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -52,6 +185,19 @@ export default function Leads() {
           <p className="text-gray-400">Manage and track your leads</p>
         </div>
         <div className="flex gap-3">
+          <Button
+            onClick={() => sendFollowupsMutation.mutate()}
+            disabled={pendingFollowupsCount === 0 || sendFollowupsMutation.isPending}
+            className="bg-blue-600 hover:bg-blue-700 text-white relative"
+          >
+            <Send className="w-5 h-5 mr-2" />
+            Send Pending Follow-ups
+            {pendingFollowupsCount > 0 && (
+              <Badge className="ml-2 bg-red-500 text-white border-0 px-2">
+                {pendingFollowupsCount}
+              </Badge>
+            )}
+          </Button>
           <Button
             onClick={() => setIsCreateModalOpen(true)}
             className="bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium"
@@ -104,17 +250,46 @@ export default function Leads() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredLeads.map(lead => (
-                  <TableRow key={lead.id} className="border-[#333333] hover:bg-[#333333]">
-                    <TableCell className="text-white font-medium">{lead.full_name}</TableCell>
-                    <TableCell className="text-gray-300">{lead.email}</TableCell>
-                    <TableCell className="text-gray-300">{lead.company || '-'}</TableCell>
-                    <TableCell>
-                      <Badge className={`${statusColors[lead.status]} text-white border-0`}>
-                        {lead.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-gray-300">{lead.language_preference || 'English'}</TableCell>
+                {filteredLeads.map(lead => {
+                  const hasPendingFollowup = (() => {
+                    if (!lead.last_status_change || !lead.campaign_id) return false;
+                    
+                    const campaign = campaigns.find(c => c.id === lead.campaign_id);
+                    if (!campaign?.followup_sequences) return false;
+
+                    const now = new Date();
+                    const statusChangeDate = new Date(lead.last_status_change);
+                    
+                    return campaign.followup_sequences.some(seq => {
+                      if (seq.trigger_status !== lead.status) return false;
+                      
+                      const daysSinceChange = Math.floor((now - statusChangeDate) / (1000 * 60 * 60 * 24));
+                      const alreadySent = lead.followup_history?.some(
+                        h => h.status === lead.status && h.subject === seq.email_subject
+                      );
+                      
+                      return daysSinceChange >= seq.delay_days && !alreadySent;
+                    });
+                  })();
+
+                  return (
+                    <TableRow key={lead.id} className={`border-[#333333] hover:bg-[#333333] ${hasPendingFollowup ? 'bg-blue-500/10' : ''}`}>
+                      <TableCell className="text-white font-medium">
+                        <div className="flex items-center gap-2">
+                          {hasPendingFollowup && (
+                            <Bell className="w-4 h-4 text-blue-500 animate-pulse" />
+                          )}
+                          {lead.full_name}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-gray-300">{lead.email}</TableCell>
+                      <TableCell className="text-gray-300">{lead.company || '-'}</TableCell>
+                      <TableCell>
+                        <Badge className={`${statusColors[lead.status]} text-white border-0`}>
+                          {lead.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-gray-300">{lead.language_preference || 'English'}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
                         <Button
@@ -144,8 +319,9 @@ export default function Leads() {
                         </Button>
                       </div>
                     </TableCell>
-                  </TableRow>
-                ))}
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
