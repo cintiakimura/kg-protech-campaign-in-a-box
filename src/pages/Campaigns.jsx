@@ -99,11 +99,12 @@ Return JSON with:
             emailBody = `Dear ${recipient.full_name},\n\n${emailBody}`;
           }
           
-          // Send actual email first with HTML clickable link
-          const htmlBody = `${emailBody.replace(/\n/g, '<br>')}<br><br>📅 <a href="${scheduleLink}" style="color: #00c600; text-decoration: underline;">Schedule your 15-minute webinar here</a>`;
+          // Convert body to HTML
+          const htmlBody = emailBody.replace(/\n/g, '<br>');
+          
+          console.log('Attempting to send email:', { to: recipient.email, subject: emailSubject, bodyLength: htmlBody.length });
           
           const emailResult = await base44.integrations.Core.SendEmail({
-            from_name: 'KG PROTECH',
             to: recipient.email,
             subject: emailSubject,
             body: htmlBody
