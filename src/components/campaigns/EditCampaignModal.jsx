@@ -229,44 +229,38 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
             </>
             )}
             </Button>
-            <label htmlFor="edit-image-upload">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleMediaUpload(e, 'image')}
-                className="hidden"
-                id="edit-image-upload"
-                disabled={isUploading}
-              />
-              <Button
-                type="button"
-                disabled={isUploading}
-                className="bg-[#333333] hover:bg-[#444444] text-white cursor-pointer"
-                onClick={() => document.getElementById('edit-image-upload').click()}
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                {isUploading ? 'Uploading...' : 'Upload Image'}
-              </Button>
-            </label>
-            <label htmlFor="edit-presentation-upload">
-              <input
-                type="file"
-                accept=".pdf,.ppt,.pptx"
-                onChange={(e) => handleMediaUpload(e, 'presentation')}
-                className="hidden"
-                id="edit-presentation-upload"
-                disabled={isUploading}
-              />
-              <Button
-                type="button"
-                disabled={isUploading}
-                className="bg-[#333333] hover:bg-[#444444] text-white cursor-pointer"
-                onClick={() => document.getElementById('edit-presentation-upload').click()}
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                {isUploading ? 'Uploading...' : 'Upload Presentation'}
-              </Button>
-            </label>
+            <Button
+              onClick={() => document.getElementById('edit-image-upload').click()}
+              disabled={isUploading}
+              className="bg-[#333333] hover:bg-[#444444] text-white"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              {isUploading ? 'Uploading...' : 'Upload Image'}
+            </Button>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleMediaUpload(e, 'image')}
+              className="hidden"
+              id="edit-image-upload"
+              disabled={isUploading}
+            />
+            <Button
+              onClick={() => document.getElementById('edit-presentation-upload').click()}
+              disabled={isUploading}
+              className="bg-[#333333] hover:bg-[#444444] text-white"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              {isUploading ? 'Uploading...' : 'Upload Presentation'}
+            </Button>
+            <input
+              type="file"
+              accept=".pdf,.ppt,.pptx"
+              onChange={(e) => handleMediaUpload(e, 'presentation')}
+              className="hidden"
+              id="edit-presentation-upload"
+              disabled={isUploading}
+            />
           </div>
 
           <div>

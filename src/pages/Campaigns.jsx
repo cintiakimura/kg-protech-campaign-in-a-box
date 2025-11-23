@@ -30,18 +30,22 @@ export default function Campaigns() {
   const launchCampaignMutation = useMutation({
     mutationFn: async ({ campaign, selectedLeads, useAIPersonalization }) => {
       console.log('Starting campaign launch:', { campaign, recipientCount: selectedLeads.length, useAIPersonalization });
-      
+
+      if (!campaign.email_subject || !campaign.email_body) {
+        throw new Error('Campaign must have both subject and body content');
+      }
+
       const scheduleLink = `${window.location.origin}/ScheduleWebinar`;
       let successCount = 0;
       const errors = [];
-      
+
       // Send emails sequentially to avoid rate limiting and ensure delivery
       for (const recipient of selectedLeads) {
         try {
           console.log('Sending email to:', recipient.email);
-          
-          let emailSubject = campaign.email_subject || 'Campaign Email';
-          let emailBody = campaign.email_body || '';
+
+          let emailSubject = campaign.email_subject;
+          let emailBody = campaign.email_body;
 
           // AI Personalization
           if (useAIPersonalization && recipient.full_name) {
