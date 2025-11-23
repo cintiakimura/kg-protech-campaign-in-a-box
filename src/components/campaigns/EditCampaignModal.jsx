@@ -9,6 +9,7 @@ import { base44 } from '@/api/base44Client';
 import CreateLeadModal from '../leads/CreateLeadModal';
 import FollowupSequenceEditor from './FollowupSequenceEditor';
 import AIMediaSuggestion from './AIMediaSuggestion';
+import AIABTestSuggestion from './AIABTestSuggestion';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 
 export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess, onLaunchClick }) {
@@ -61,6 +62,13 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
         media_url: suggestion.media_url
       }));
     }
+  };
+
+  const handleABTestVariantApplied = (variant) => {
+    setFormData(prev => ({
+      ...prev,
+      ...variant
+    }));
   };
 
   const handleGenerateCopy = async () => {
@@ -254,6 +262,12 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
           <AIMediaSuggestion 
             campaigns={campaigns} 
             onSuggestionApplied={handleAISuggestionApplied}
+          />
+
+          <AIABTestSuggestion
+            campaigns={campaigns}
+            currentCampaign={formData}
+            onVariantApplied={handleABTestVariantApplied}
           />
 
           <div className="flex gap-3 flex-wrap">
