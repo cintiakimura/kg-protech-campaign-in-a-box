@@ -7,7 +7,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { base44 } from '@/api/base44Client';
 import FollowupSequenceEditor from './FollowupSequenceEditor';
-import AIABTestSuggestion from './AIABTestSuggestion';
 import { useQuery } from '@tanstack/react-query';
 
 export default function CreateCampaignModal({ isOpen, onClose, onSuccess }) {
@@ -31,13 +30,6 @@ export default function CreateCampaignModal({ isOpen, onClose, onSuccess }) {
   });
 
   if (!isOpen) return null;
-
-  const handleABTestVariantApplied = (variant) => {
-    setFormData(prev => ({
-      ...prev,
-      ...variant
-    }));
-  };
 
   const handleGenerateCopy = async () => {
     if (!formData.name || !formData.target_audience) {
@@ -95,32 +87,6 @@ export default function CreateCampaignModal({ isOpen, onClose, onSuccess }) {
       alert('Failed to generate copy. Please try again.');
     } finally {
       setIsGeneratingCopy(false);
-    }
-  };
-
-  const handleGenerateImage = async () => {
-    if (!formData.name) {
-      alert('Please fill in campaign name first');
-      return;
-    }
-    
-    setIsGeneratingImage(true);
-    try {
-      const prompt = `Professional automotive training scene: Modern cars in a professional garage workshop with technicians learning IoT automotive systems. High-tech equipment, diagnostic tools, connected vehicle sensors, and digital training displays. Clean, modern garage environment with good lighting. Photorealistic style.`;
-      
-      const result = await base44.integrations.Core.GenerateImage({
-        prompt: prompt
-      });
-
-      setFormData(prev => ({
-        ...prev,
-        media_type: 'image',
-        media_url: result.url
-      }));
-    } catch (error) {
-      alert('Failed to generate image. Please try again.');
-    } finally {
-      setIsGeneratingImage(false);
     }
   };
 
@@ -225,40 +191,20 @@ export default function CreateCampaignModal({ isOpen, onClose, onSuccess }) {
             </div>
             </div>
 
-            <AIABTestSuggestion
-              campaigns={campaigns}
-              currentCampaign={formData}
-              onVariantApplied={handleABTestVariantApplied}
-            />
-
             <div className="flex gap-3 flex-wrap">
             <Button
-              onClick={handleGenerateCopy}
-              disabled={isGeneratingCopy}
-              className="bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium"
+            onClick={handleGenerateCopy}
+            disabled={isGeneratingCopy}
+            className="bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium"
             >
-              {isGeneratingCopy ? (
-                <>Generating Copy...</>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Generate Copy with AI
-                </>
-              )}
-            </Button>
-            <Button
-              onClick={handleGenerateImage}
-              disabled={isGeneratingImage}
-              className="bg-[#333333] hover:bg-[#444444] text-white"
-            >
-              {isGeneratingImage ? (
-                <>Generating...</>
-              ) : (
-                <>
-                  <ImageIcon className="w-4 h-4 mr-2" />
-                  Generate Image
-                </>
-              )}
+            {isGeneratingCopy ? (
+            <>Generating Copy...</>
+            ) : (
+            <>
+              <Sparkles className="w-4 h-4 mr-2" />
+              Generate Copy with AI
+            </>
+            )}
             </Button>
             <div>
               <input
