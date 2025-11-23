@@ -27,17 +27,7 @@ export default function CreateClientModal({ isOpen, onClose, onSuccess }) {
 
     setIsSaving(true);
     try {
-      await base44.entities.Client.create({
-        ...formData,
-        checklist: {
-          cold_email: false,
-          followup: false,
-          proposal: false,
-          negotiation: false,
-          invoice: false,
-          delivery: false
-        }
-      });
+      await base44.entities.Client.create(formData);
       onSuccess();
       onClose();
       setFormData({

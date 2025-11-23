@@ -3,10 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Building2, Sparkles, CheckCircle2, Circle, Plus, UserPlus, Search, Edit } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
+import { Building2, Sparkles, Plus, UserPlus, Search, Edit } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import CreateClientModal from '../components/clients/CreateClientModal';
 import EditClientModal from '../components/clients/EditClientModal';
 import CreateLeadModal from '../components/leads/CreateLeadModal';
@@ -39,15 +37,7 @@ export default function Clients() {
         if (!existingClient) {
           const newClient = await base44.entities.Client.create({
             name: company,
-            status: 'prospect',
-            checklist: {
-              cold_email: false,
-              followup: false,
-              proposal: false,
-              negotiation: false,
-              invoice: false,
-              delivery: false
-            }
+            status: 'prospect'
           });
           
           // Link leads to this client
@@ -68,30 +58,6 @@ export default function Clients() {
       alert('Leads organized successfully!');
     }
   });
-
-  const updateChecklistMutation = useMutation({
-    mutationFn: ({ clientId, checklist }) => 
-      base44.entities.Client.update(clientId, { checklist }),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['clients']);
-    }
-  });
-
-  const calculateProgress = (checklist) => {
-    if (!checklist) return 0;
-    const items = Object.values(checklist);
-    const completed = items.filter(Boolean).length;
-    return Math.round((completed / items.length) * 100);
-  };
-
-  const checklistSteps = [
-    { key: 'cold_email', label: 'Cold Email' },
-    { key: 'followup', label: 'Follow-up' },
-    { key: 'proposal', label: 'Proposal' },
-    { key: 'negotiation', label: 'Negotiation' },
-    { key: 'invoice', label: 'Invoice' },
-    { key: 'delivery', label: 'Delivery' }
-  ];
 
   const filteredClients = clients.filter(client => {
     const query = searchQuery.toLowerCase();
@@ -172,7 +138,6 @@ export default function Clients() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filteredClients.map(client => {
-            const progress = calculateProgress(client.checklist);
             const clientLeads = leads.filter(l => l.client_id === client.id);
             
             return (
@@ -206,40 +171,9 @@ export default function Clients() {
                   <p className="text-gray-400 text-sm mb-4">{client.industry}</p>
                 )}
 
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-gray-400 text-sm">Sales Progress</span>
-                    <span className="text-[#00c600] text-sm font-medium">{progress}%</span>
-                  </div>
-                  <Progress value={progress} className="h-2 bg-[#333333]" />
-                </div>
-
-                <div className="space-y-2 mb-4">
-                  {checklistSteps.map(step => {
-                    const isChecked = client.checklist?.[step.key] || false;
-                    return (
-                      <div key={step.key} className="flex items-center gap-3 p-2 rounded hover:bg-[#333333] transition-colors">
-                        <Checkbox
-                          checked={isChecked}
-                          onCheckedChange={(checked) => {
-                            updateChecklistMutation.mutate({
-                              clientId: client.id,
-                              checklist: {
-                                ...client.checklist,
-                                [step.key]: checked
-                              }
-                            });
-                          }}
-                          className="border-[#444444] data-[state=checked]:bg-[#00c600] data-[state=checked]:border-[#00c600]"
-                        />
-                        <span className={`text-sm ${isChecked ? 'text-white' : 'text-gray-400'}`}>
-                          {step.label}
-                        </span>
-                        {isChecked && <CheckCircle2 className="w-4 h-4 text-[#00c600] ml-auto" />}
-                      </div>
-                    );
-                  })}
-                </div>
+                {client.notes && (
+                  <p className="text-gray-400 text-sm mb-4">{client.notes}</p>
+                )}
 
                 <Button
                   onClick={() => handleAddLeadToClient(client)}
