@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { base44 } from '@/api/base44Client';
 import FollowupSequenceEditor from './FollowupSequenceEditor';
+import AIMediaSuggestion from './AIMediaSuggestion';
+import { useQuery } from '@tanstack/react-query';
 
 export default function CreateCampaignModal({ isOpen, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
@@ -23,7 +25,22 @@ export default function CreateCampaignModal({ isOpen, onClose, onSuccess }) {
   const [isGeneratingCopy, setIsGeneratingCopy] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
+  const { data: campaigns = [] } = useQuery({
+    queryKey: ['campaigns'],
+    queryFn: () => base44.entities.Campaign.list()
+  });
+
   if (!isOpen) return null;
+
+  const handleAISuggestionApplied = (suggestion) => {
+    if (suggestion.media_type && suggestion.media_url) {
+      setFormData(prev => ({
+        ...prev,
+        media_type: suggestion.media_type,
+        media_url: suggestion.media_url
+      }));
+    }
+  };
 
   const handleGenerateCopy = async () => {
     if (!formData.name || !formData.target_audience) {
@@ -210,6 +227,11 @@ export default function CreateCampaignModal({ isOpen, onClose, onSuccess }) {
               />
             </div>
           </div>
+
+          <AIMediaSuggestion 
+            campaigns={campaigns} 
+            onSuggestionApplied={handleAISuggestionApplied}
+          />
 
           <div className="flex gap-3 flex-wrap">
             <Button

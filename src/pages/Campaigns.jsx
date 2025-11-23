@@ -28,8 +28,8 @@ export default function Campaigns() {
   });
 
   const launchCampaignMutation = useMutation({
-    mutationFn: async ({ campaign, selectedLeads }) => {
-      console.log('Starting campaign launch:', { campaign, recipientCount: selectedLeads.length });
+    mutationFn: async ({ campaign, selectedLeads, useAIPersonalization }) => {
+      console.log('Starting campaign launch:', { campaign, recipientCount: selectedLeads.length, useAIPersonalization });
       
       const scheduleLink = `${window.location.origin}/ScheduleWebinar`;
       let successCount = 0;
@@ -40,14 +40,68 @@ export default function Campaigns() {
         try {
           console.log('Sending email to:', recipient.email);
           
+          let emailSubject = campaign.email_subject || 'Campaign Email';
+          let emailBody = campaign.email_body || '';
+
+          // AI Personalization
+          if (useAIPersonalization && recipient.full_name) {
+            try {
+              const personalizationPrompt = `You are personalizing a cold email for KG PROTECH's IoT automotive training product.
+
+Original Subject: ${emailSubject}
+Original Body: ${emailBody}
+
+Lead Information:
+- Name: ${recipient.full_name}
+- Company: ${recipient.company || 'Not specified'}
+- Email: ${recipient.email}
+- Status: ${recipient.status || 'new'}
+- Language: ${recipient.language_preference || 'English'}
+
+TASK: Personalize ONLY the subject line and opening paragraph based on this lead's data. Keep the product benefits, CTA, and signature exactly the same.
+
+Rules:
+1. Address them by name: "Dear ${recipient.full_name},"
+2. Reference their company if available
+3. Keep it concise (same length as original)
+4. Write in ${recipient.language_preference || 'English'}
+5. Maintain professional tone
+6. Keep the rest of the email identical
+
+Return JSON with:
+{
+  "subject": "personalized subject here",
+  "body": "full personalized email body with signature"
+}`;
+
+              const personalizedContent = await base44.integrations.Core.InvokeLLM({
+                prompt: personalizationPrompt,
+                response_json_schema: {
+                  type: "object",
+                  properties: {
+                    subject: { type: "string" },
+                    body: { type: "string" }
+                  }
+                }
+              });
+
+              emailSubject = personalizedContent.subject;
+              emailBody = personalizedContent.body;
+            } catch (aiError) {
+              console.warn('AI personalization failed, using original content:', aiError);
+            }
+          } else {
+            // Non-AI personalization: just add name
+            emailBody = `Dear ${recipient.full_name},\n\n${emailBody}`;
+          }
+          
           // Send actual email first with HTML clickable link
-          const emailBody = campaign.email_body || '';
           const htmlBody = `${emailBody.replace(/\n/g, '<br>')}<br><br>📅 <a href="${scheduleLink}" style="color: #00c600; text-decoration: underline;">Schedule your 15-minute webinar here</a>`;
           
           const emailResult = await base44.integrations.Core.SendEmail({
             from_name: 'KG PROTECH',
             to: recipient.email,
-            subject: campaign.email_subject || 'Campaign Email',
+            subject: emailSubject,
             body: htmlBody
           });
 
@@ -55,7 +109,7 @@ export default function Campaigns() {
 
           // Create email record in database after successful send
           await base44.entities.EmailMessage.create({
-            subject: campaign.email_subject,
+            subject: emailSubject,
             body: htmlBody,
             from_email: 'campaigns@kgprotech.com',
             to_email: recipient.email,
@@ -63,6 +117,13 @@ export default function Campaigns() {
             is_read: true,
             date: new Date().toISOString()
           });
+
+          // Update lead with campaign reference
+          if (recipient.id) {
+            await base44.entities.Lead.update(recipient.id, {
+              campaign_id: campaign.id
+            });
+          }
 
           successCount++;
         } catch (error) {
@@ -157,8 +218,8 @@ export default function Campaigns() {
     setIsSelectRecipientsOpen(true);
   };
 
-  const handleConfirmLaunch = (selectedLeads) => {
-    launchCampaignMutation.mutate({ campaign: selectedCampaign, selectedLeads });
+  const handleConfirmLaunch = (selectedLeads, useAIPersonalization) => {
+    launchCampaignMutation.mutate({ campaign: selectedCampaign, selectedLeads, useAIPersonalization });
   };
 
   const handleEditClick = (campaign) => {
@@ -346,6 +407,7 @@ export default function Campaigns() {
           setSelectedCampaign(null);
         }}
         leads={leads}
+        campaign={selectedCampaign}
         onConfirm={handleConfirmLaunch}
         isLaunching={launchCampaignMutation.isPending}
         onLeadCreated={() => queryClient.invalidateQueries(['leads'])}

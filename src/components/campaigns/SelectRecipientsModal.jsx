@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { X, Send, Plus, Trash2 } from 'lucide-react';
+import { X, Send, Plus, Trash2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 
-export default function SelectRecipientsModal({ isOpen, onClose, leads, onConfirm, isLaunching }) {
+export default function SelectRecipientsModal({ isOpen, onClose, leads, onConfirm, isLaunching, campaign }) {
   const [selectedLeads, setSelectedLeads] = useState([]);
   const [manualEmails, setManualEmails] = useState([]);
   const [emailInput, setEmailInput] = useState('');
+  const [useAIPersonalization, setUseAIPersonalization] = useState(true);
 
   if (!isOpen) return null;
 
@@ -54,7 +56,7 @@ export default function SelectRecipientsModal({ isOpen, onClose, leads, onConfir
   const handleConfirm = () => {
     const selected = leads.filter((l) => selectedLeads.includes(l.id));
     const manualRecipients = manualEmails.map(email => ({ email, full_name: email }));
-    onConfirm([...selected, ...manualRecipients]);
+    onConfirm([...selected, ...manualRecipients], useAIPersonalization);
   };
 
   // Group leads by company
@@ -170,15 +172,35 @@ export default function SelectRecipientsModal({ isOpen, onClose, leads, onConfir
           </div>
         </div>
 
-        <div className="border-t border-[#333333] p-6 flex gap-3">
-          <Button
-            onClick={handleConfirm}
-            disabled={(selectedLeads.length === 0 && manualEmails.length === 0) || isLaunching}
-            className="flex-1 bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium"
-          >
-            <Send className="w-4 h-4 mr-2" />
-            {isLaunching ? 'Launching...' : `Launch to ${selectedLeads.length + manualEmails.length} Recipients`}
-          </Button>
+        <div className="border-t border-[#333333] p-6">
+          <div className="flex items-center gap-3 mb-4 p-3 bg-[#333333] rounded-lg">
+            <Checkbox
+              checked={useAIPersonalization}
+              onCheckedChange={setUseAIPersonalization}
+              className="border-[#555555] data-[state=checked]:bg-[#00c600] data-[state=checked]:border-[#00c600]"
+            />
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-[#00c600]" />
+                <Label className="text-white font-medium cursor-pointer" onClick={() => setUseAIPersonalization(!useAIPersonalization)}>
+                  AI-Powered Email Personalization
+                </Label>
+              </div>
+              <p className="text-gray-400 text-xs mt-1">
+                Automatically customize subject lines and email bodies based on each lead's company, industry, and interactions
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <Button
+              onClick={handleConfirm}
+              disabled={(selectedLeads.length === 0 && manualEmails.length === 0) || isLaunching}
+              className="flex-1 bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium"
+            >
+              {useAIPersonalization ? <Sparkles className="w-4 h-4 mr-2" /> : <Send className="w-4 h-4 mr-2" />}
+              {isLaunching ? 'Launching...' : `Launch to ${selectedLeads.length + manualEmails.length} Recipients`}
+            </Button>
           <Button
             onClick={onClose}
             variant="outline" className="bg-[#00c600] text-[#212121] px-4 py-2 text-sm font-medium rounded-md inline-flex items-center justify-center gap-2 whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border shadow-sm hover:text-accent-foreground h-9 border-[#444444] hover:bg-[#333333]"

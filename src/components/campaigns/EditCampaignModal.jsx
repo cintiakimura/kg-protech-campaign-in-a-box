@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { base44 } from '@/api/base44Client';
 import CreateLeadModal from '../leads/CreateLeadModal';
 import FollowupSequenceEditor from './FollowupSequenceEditor';
-import { useQueryClient } from '@tanstack/react-query';
+import AIMediaSuggestion from './AIMediaSuggestion';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 
 export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess, onLaunchClick }) {
   const [formData, setFormData] = useState({
@@ -24,6 +25,11 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
   const [videoUrl, setVideoUrl] = useState('');
   const [isCreateLeadModalOpen, setIsCreateLeadModalOpen] = useState(false);
   const queryClient = useQueryClient();
+
+  const { data: campaigns = [] } = useQuery({
+    queryKey: ['campaigns'],
+    queryFn: () => base44.entities.Campaign.list()
+  });
   
   React.useEffect(() => {
     if (campaign) {
@@ -46,6 +52,16 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
   if (!isOpen || !campaign) return null;
+
+  const handleAISuggestionApplied = (suggestion) => {
+    if (suggestion.media_type && suggestion.media_url) {
+      setFormData(prev => ({
+        ...prev,
+        media_type: suggestion.media_type,
+        media_url: suggestion.media_url
+      }));
+    }
+  };
 
   const handleGenerateCopy = async () => {
     if (!formData.name || !formData.target_audience) {
@@ -234,6 +250,11 @@ export default function EditCampaignModal({ isOpen, onClose, campaign, onSuccess
               />
             </div>
           </div>
+
+          <AIMediaSuggestion 
+            campaigns={campaigns} 
+            onSuggestionApplied={handleAISuggestionApplied}
+          />
 
           <div className="flex gap-3 flex-wrap">
             <Button
