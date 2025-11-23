@@ -35,13 +35,46 @@ export default function Campaigns() {
       let successCount = 0;
       const errors = [];
       
-      // Send emails sequentially to avoid rate limiting and ensure delivery
-      for (const recipient of selectedLeads) {
-        try {
-          console.log('Sending email to:', recipient.email);
+      // A/B Testing: Distribute recipients across variants
+      let recipientVariantMap = [];
+      if (campaign.ab_test_enabled && campaign.ab_test_variants?.length > 0) {
+        const variants = campaign.ab_test_variants;
+        let assignedIndex = 0;
+        
+        // Create weighted distribution based on traffic percentages
+        selectedLeads.forEach((recipient) => {
+          const randomValue = Math.random() * 100;
+          let cumulativePercentage = 0;
+          let assignedVariant = variants[0];
           
-          let emailSubject = campaign.email_subject || 'Campaign Email';
-          let emailBody = campaign.email_body || '';
+          for (const variant of variants) {
+            cumulativePercentage += variant.traffic_percentage || 0;
+            if (randomValue <= cumulativePercentage) {
+              assignedVariant = variant;
+              break;
+            }
+          }
+          
+          recipientVariantMap.push({
+            recipient,
+            variant: assignedVariant
+          });
+        });
+      } else {
+        // No A/B testing, use default campaign content
+        recipientVariantMap = selectedLeads.map(recipient => ({
+          recipient,
+          variant: null
+        }));
+      }
+      
+      // Send emails sequentially to avoid rate limiting and ensure delivery
+      for (const { recipient, variant } of recipientVariantMap) {
+        try {
+          console.log('Sending email to:', recipient.email, 'with variant:', variant?.name || 'default');
+          
+          let emailSubject = variant ? variant.email_subject : (campaign.email_subject || 'Campaign Email');
+          let emailBody = variant ? variant.email_body : (campaign.email_body || '');
 
           // AI Personalization
           if (useAIPersonalization && recipient.full_name) {
@@ -118,10 +151,26 @@ Return JSON with:
             date: new Date().toISOString()
           });
 
-          // Update lead with campaign reference
+          // Update lead with campaign and variant reference
           if (recipient.id) {
             await base44.entities.Lead.update(recipient.id, {
-              campaign_id: campaign.id
+              campaign_id: campaign.id,
+              ab_test_variant_id: variant?.variant_id || null,
+              email_opened: false,
+              email_clicked: false,
+              email_converted: false
+            });
+          }
+
+          // Update variant stats
+          if (variant) {
+            const updatedVariants = campaign.ab_test_variants.map(v => 
+              v.variant_id === variant.variant_id 
+                ? { ...v, sent_count: (v.sent_count || 0) + 1 }
+                : v
+            );
+            await base44.entities.Campaign.update(campaign.id, {
+              ab_test_variants: updatedVariants
             });
           }
 
