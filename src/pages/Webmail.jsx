@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Mail, Inbox, Send, FileText, Trash2, Plus, X } from 'lucide-react';
+import { Mail, Inbox, Send, FileText, Trash2, Plus, X, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 
@@ -25,13 +25,19 @@ export default function Webmail() {
     queryFn: () => base44.entities.EmailMessage.list('-created_date')
   });
 
+  const syncGmailMutation = useMutation({
+    mutationFn: () => base44.functions.invoke('syncGmail', { action: 'sync' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['emails']);
+    }
+  });
+
   const sendEmailMutation = useMutation({
-    mutationFn: (data) => base44.entities.EmailMessage.create({
-      ...data,
-      from_email: 'campaigns@kgprotech.com',
-      folder: 'sent',
-      is_read: true,
-      date: new Date().toISOString()
+    mutationFn: (data) => base44.functions.invoke('syncGmail', {
+      action: 'send',
+      to: data.to_email,
+      subject: data.subject,
+      body: data.body
     }),
     onSuccess: () => {
       queryClient.invalidateQueries(['emails']);
@@ -68,15 +74,23 @@ export default function Webmail() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">Webmail</h1>
-          <p className="text-gray-400">Manage your email communications</p>
+          <p className="text-gray-400">Synced with info@kgprotech.com</p>
         </div>
-        <Button
-          onClick={() => setIsComposeOpen(true)}
-          className="bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium">
-
-          <Plus className="w-5 h-5 mr-2" />
-          Compose
-        </Button>
+        <div className="flex gap-3">
+          <Button
+            onClick={() => syncGmailMutation.mutate()}
+            disabled={syncGmailMutation.isPending}
+            className="bg-[#333333] hover:bg-[#444444] text-white">
+            <RefreshCw className={`w-5 h-5 mr-2 ${syncGmailMutation.isPending ? 'animate-spin' : ''}`} />
+            Sync Gmail
+          </Button>
+          <Button
+            onClick={() => setIsComposeOpen(true)}
+            className="bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium">
+            <Plus className="w-5 h-5 mr-2" />
+            Compose
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-12 gap-6">

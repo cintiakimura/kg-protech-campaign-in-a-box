@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar as CalendarIcon, Plus, ExternalLink, Video, X } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus, ExternalLink, Video, X, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 
@@ -27,10 +27,24 @@ export default function Calendar() {
     queryFn: () => base44.entities.Webinar.list('-start_time')
   });
 
+  const syncCalendarMutation = useMutation({
+    mutationFn: () => base44.functions.invoke('syncGoogleCalendar', { action: 'sync' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['webinars']);
+    }
+  });
+
   const createWebinarMutation = useMutation({
-    mutationFn: (data) => base44.entities.Webinar.create({
-      ...data,
-      attendees: []
+    mutationFn: (data) => base44.functions.invoke('syncGoogleCalendar', {
+      action: 'create',
+      event: {
+        title: data.title,
+        description: data.description,
+        start_time: new Date(data.start_time).toISOString(),
+        end_time: new Date(data.end_time).toISOString(),
+        host_name: data.host_name,
+        attendees: []
+      }
     }),
     onSuccess: () => {
       queryClient.invalidateQueries(['webinars']);
@@ -61,15 +75,23 @@ export default function Calendar() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">Calendar & Webinars</h1>
-          <p className="text-gray-400">Schedule and manage training sessions</p>
+          <p className="text-gray-400">Synced with info@kgprotech.com</p>
         </div>
-        <Button
-          onClick={() => setIsCreateModalOpen(true)}
-          className="bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium">
-
-          <Plus className="w-5 h-5 mr-2" />
-          Schedule Webinar
-        </Button>
+        <div className="flex gap-3">
+          <Button
+            onClick={() => syncCalendarMutation.mutate()}
+            disabled={syncCalendarMutation.isPending}
+            className="bg-[#333333] hover:bg-[#444444] text-white">
+            <RefreshCw className={`w-5 h-5 mr-2 ${syncCalendarMutation.isPending ? 'animate-spin' : ''}`} />
+            Sync Calendar
+          </Button>
+          <Button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="bg-[#00c600] hover:bg-[#00dd00] text-[#212121] font-medium">
+            <Plus className="w-5 h-5 mr-2" />
+            Schedule Webinar
+          </Button>
+        </div>
       </div>
 
       {/* Upcoming Webinars */}
