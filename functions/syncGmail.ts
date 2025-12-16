@@ -2,7 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 
 async function getAccessToken() {
   const clientId = Deno.env.get('GOOGLE_CLIENT_ID');
-  const clientSecret = Deno.env.get('google_oauth_client_secret');
+  const clientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET');
   const refreshToken = Deno.env.get('GOOGLE_REFRESH_TOKEN');
 
   if (!clientId || !clientSecret || !refreshToken) {
