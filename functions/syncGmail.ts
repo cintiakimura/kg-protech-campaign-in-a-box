@@ -51,7 +51,7 @@ async function fetchGmailMessages(accessToken) {
   );
 
   return messages.map(msg => {
-    const headers = msg.payload.headers;
+    const headers = msg.payload?.headers || [];
     const getHeader = (name) => headers.find(h => h.name === name)?.value || '';
     
     return {
@@ -59,7 +59,7 @@ async function fetchGmailMessages(accessToken) {
       from_email: getHeader('From').match(/<(.+?)>/)?.[1] || getHeader('From'),
       to_email: getHeader('To').match(/<(.+?)>/)?.[1] || getHeader('To'),
       date: getHeader('Date'),
-      body: msg.snippet,
+      body: msg.snippet || '',
       folder: msg.labelIds?.includes('SENT') ? 'sent' : 'inbox',
       is_read: !msg.labelIds?.includes('UNREAD')
     };
