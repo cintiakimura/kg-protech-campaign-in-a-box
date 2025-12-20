@@ -108,7 +108,8 @@ Deno.serve(async (req) => {
     const accessToken = await getAccessToken();
 
     if (action === 'sync') {
-      const messages = await fetchGmailMessages(accessToken);
+      const maxResults = 10;
+      const messages = await fetchGmailMessages(accessToken, maxResults);
       
       for (const msg of messages) {
         const existing = await base44.entities.EmailMessage.filter({
