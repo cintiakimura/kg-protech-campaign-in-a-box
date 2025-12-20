@@ -12,8 +12,15 @@ import {
 import { base44 } from '@/api/base44Client';
 
 export default function Layout({ children, currentPageName }) {
+  const [user, setUser] = React.useState(null);
+
+  React.useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => setUser(null));
+  }, []);
+
   const tabs = [
     { id: 'Dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    ...(user?.role === 'manager' || user?.role === 'admin' ? [{ id: 'ManagerDashboard', label: 'Manager', icon: Users }] : []),
     { id: 'Campaigns', label: 'Campaigns', icon: Megaphone },
     { id: 'Leads', label: 'Leads', icon: Users },
     { id: 'Clients', label: 'Clients', icon: Building2 },
