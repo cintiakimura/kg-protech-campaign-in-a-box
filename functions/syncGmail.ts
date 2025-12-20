@@ -29,9 +29,9 @@ async function getAccessToken() {
   return data.access_token;
 }
 
-async function fetchGmailMessages(accessToken) {
+async function fetchGmailMessages(accessToken, maxResults = 10) {
   const response = await fetch(
-    'https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=50',
+    `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=${maxResults}`,
     {
       headers: { Authorization: `Bearer ${accessToken}` }
     }
@@ -40,15 +40,15 @@ async function fetchGmailMessages(accessToken) {
   const data = await response.json();
   if (!data.messages) return [];
 
-  const messages = await Promise.all(
-    data.messages.map(async (msg) => {
-      const msgResponse = await fetch(
-        `https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}`,
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-      );
-      return msgResponse.json();
-    })
-  );
+  const messages = [];
+  for (const msg of data.messages) {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    const msgResponse = await fetch(
+      `https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+    messages.push(await msgResponse.json());
+  }
 
   return messages.map(msg => {
     const headers = msg.payload?.headers || [];
