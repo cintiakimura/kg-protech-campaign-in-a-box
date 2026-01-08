@@ -1,25 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 
-async function getAccessToken() {
-  const clientId = Deno.env.get('GOOGLE_CLIENT_ID');
-  const clientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET');
-  const refreshToken = Deno.env.get('GOOGLE_REFRESH_TOKEN');
-
-  const response = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: clientId,
-      client_secret: clientSecret,
-      refresh_token: refreshToken,
-      grant_type: 'refresh_token'
-    })
-  });
-
-  const data = await response.json();
-  return data.access_token;
-}
-
 async function fetchCalendarEvents(accessToken) {
   const timeMin = new Date().toISOString();
   const response = await fetch(
@@ -91,7 +71,7 @@ Deno.serve(async (req) => {
     }
 
     const { action, event } = await req.json();
-    const accessToken = await getAccessToken();
+    const accessToken = await base44.asServiceRole.connectors.getAccessToken("googlecalendar");
 
     if (action === 'sync') {
       const events = await fetchCalendarEvents(accessToken);
