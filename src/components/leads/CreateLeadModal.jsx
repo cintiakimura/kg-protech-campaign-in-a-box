@@ -49,7 +49,8 @@ export default function CreateLeadModal({ isOpen, onClose, onSuccess, prefilledC
         notes: ''
       });
     } catch (error) {
-      alert('Failed to create lead');
+      console.error('Lead creation error:', error);
+      alert(`Failed to create lead: ${error.message || 'Unknown error'}`);
     } finally {
       setIsSaving(false);
     }
