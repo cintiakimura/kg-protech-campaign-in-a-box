@@ -5,6 +5,14 @@ import StatsCard from '../components/dashboard/StatsCard';
 import { Megaphone, Users, Building2, Mail, TrendingUp, Calendar } from 'lucide-react';
 
 export default function Dashboard() {
+  useEffect(() => {
+    base44.auth.isAuthenticated().then(isAuth => {
+      if (!isAuth) {
+        base44.auth.redirectToLogin(window.location.pathname);
+      }
+    });
+  }, []);
+
   const { data: campaigns = [] } = useQuery({
     queryKey: ['campaigns'],
     queryFn: () => base44.entities.Campaign.list()
